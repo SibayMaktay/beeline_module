@@ -41,32 +41,32 @@ TARFF_MAPPING = {
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    """
+    Современный способ управления жизненным циклом приложения (замена @app.on_event)
+    """
     global beeline_client, utm5_client
-    
-    logger.info("Инициализация клиентов интеграции...")
-    
-    # Теперь передаем только базовый URL
+
+    logger.info("Инициализвация клиентов интеграции...")
+
     beeline_client = BeelineClient(
-        base_url=config.beeline_url_base
+        auth_url = f"{config.beeline_url_base}/api/AuthService",
+        subscriber_url = f"{config.beeline_url_base}/api/SubscriberService"
     )
-    
+
     utm5_client = UTM5Client(
-        base_url=config.utm5_api_url,
-        login=config.utm5_login,
-        password=config.utm5_password
+        base_url = config.utm5_api_url,
+        login = config.utm5_login,
+        password = config.utm5_password
     )
-    
-    # Автоматическая аутентификация при старте
+
     if not utm5_client.authenticate():
         logger.warning("Не удалось аутентифицироваться в UTM5 при запуске.")
-    
-    # Для Beeline аутентификация часто делается по запросу, 
-    # но можно раскомментировать строку ниже, если нужен глобальный логин при старте:
-    # beeline_client.authenticate(config.beeline_login, config.beeline_password)
+    else:
+        logger.info("UTM5 аутентификация успешна.")
 
     yield
 
-    logger.info("Завершение работы модуля интеграции...")
+    logger.info("Завершение работы модуля интеграции")
     if utm5_client and hasattr(utm5_client, 'session'):
         utm5_client.session.close()
 
