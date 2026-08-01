@@ -62,7 +62,7 @@ async def lifespan(app: FastAPI):
     
     # Для Beeline аутентификация часто делается по запросу, 
     # но можно раскомментировать строку ниже, если нужен глобальный логин при старте:
-    # beeline_client.authenticate(config.beeline_login, config.beeline_password)
+    beeline_client.authenticate(config.beeline_login, config.beeline_password)
 
     yield
 

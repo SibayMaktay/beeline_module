@@ -16,7 +16,9 @@ class BeelineClient:
         self.session.timeout = timeout
 
     def authenticate(self, login: str, password: str) -> bool:
-        """Аутентификация в системе Beeline через SOAP"""
+        """
+        Аутентификация в системе Beeline через SOAP
+        """
         url = f"{self.base_url}/api/AuthService"
         
         payload = f"""<soapenv:Envelope
@@ -69,7 +71,9 @@ class BeelineClient:
             return False
 
     def _make_soap_request(self, endpoint: str, action: str, body_params: dict, namespace: str = "urn:uss-wsapi:Subscriber") -> Optional[Any]:
-        """Универсальный метод для отправки SOAP запросов"""
+        """
+        Универсальный метод для отправки SOAP запросов
+        """
         if not self.session_id:
             logger.error("Отсутствует session_id. Выполните аутентификацию.")
             return None
@@ -94,7 +98,7 @@ class BeelineClient:
         # SUAPAction может отличаться для разных методов, это шаблон
         headers = {
             "Content-Type": "text/xml; charset=utf-8",
-            "SUAPAction": f'"urn:uss-wsapi:Subscriber:SubscriberInterface:{action}Request"'
+            "SUAPAction": f'"urn:uss-wsapi:Subscriber:SubscriberInterface:{action}"'
         }
         
         try:

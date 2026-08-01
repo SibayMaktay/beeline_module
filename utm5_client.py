@@ -1,4 +1,3 @@
-import config
 import requests
 import logging
 from typing import Optional, Any

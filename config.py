@@ -9,9 +9,10 @@ beeline_login = os.getenv('BEELINE_LOGIN')
 beeline_password = os.getenv('BEELINE_PASSWORD')
 beeline_url_base = "https://my.beeline.ru"
 
-utm5_api_url = "http://localhost:9080"
+utm5_api_url = "http://localhost"
 utm5_login = os.getenv('UTM5_LOGIN')
 utm5_password = os.getenv('UTM5_PASSWORD')
+utm5_port = "9080"
 
 module_host = "127.0.0.1"
 module_port = "9090"
