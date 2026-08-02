@@ -95,10 +95,10 @@ class BeelineClient:
         </soapenv:Body>
         </soapenv:Envelope>"""
         
-        # SUAPAction может отличаться для разных методов, это шаблон
+        # SOAPAction может отличаться для разных методов, это шаблон
         headers = {
             "Content-Type": "text/xml; charset=utf-8",
-            "SUAPAction": f'"urn:uss-wsapi:Subscriber:SubscriberInterface:{action}"'
+            "SOAPAction": f'"urn:uss-wsapi:Subscriber:SubscriberInterface:{action}"'
         }
         
         try:

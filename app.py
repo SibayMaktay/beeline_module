@@ -81,12 +81,12 @@ async def authenticate_beeline(request: AuthRequest):
     """
     Аутентификация в BeeLine
     """
-    success = beeline_client.aurhenticate(request.login, request.password)
+    success = beeline_client.authenticate(request.login, request.password)
     if success:
         return {"status": "success", "message": "Authenticated"}
     raise HTTPException(status_code=401, detail="Authentication failed")
 
-@app.get("/subscriber/{phone_nomber}", summary="Получение информации об абоненте")
+@app.get("/subscriber/{phone_number}", summary="Получение информации об абоненте")
 async def get_subscriber_info(phone_number: str):
     """
     Получение информации об абоненте из BeeLine
@@ -180,7 +180,7 @@ async def change_tariff(request: TariffChangeRequest):
     # 3. Меняем тариф в UTM5
     utm5_result = utm5_client.change_user_tariff(
         request.utm5_user_id,
-        request.new_tariff_code
+        utm5_tariff_id
     )
     if not utm5_result:
         raise HTTPException(status_code=500, detail="Failed to change tariff in UTM5")
