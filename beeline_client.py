@@ -1,7 +1,14 @@
 import logging
 import requests
-from typing import Optional, Any
+from typing import Optional, Any, Dict
 import xml.etree.ElementTree as ET
+
+try:
+    import xmltodict
+    HAS_XMLTODICT = True
+except ImportError:
+    HAS_XMLTODICT = False
+    logging.getLogger(__name__).warning("Модуль 'xmltodict' не найден. Установите: pip install xmltodict")
 
 logger = logging.getLogger(__name__)
 
@@ -15,31 +22,45 @@ class BeelineClient:
         self.session = requests.Session()
         self.session.timeout = timeout
 
+    def _build_soap_envelope(self, interface: str, action: str, body_params: Dict[str, Any]) -> str:
+        """
+        Безопасная сборка SOAP-конверта с защитой от XML-инъекций
+        """
+        root = ET.Element(
+            "soapenv:Envelope",
+            attrib={
+                "xmlns:soapenv": "http://schemas.xmlsoap.org/soap/envelope/",
+                "xmlns:urn": f"urn:uss-wsapi:{interface}"
+            }
+        )
+        ET.SubElement(root, "soapenv:Header")
+        body = ET.SubElement(root, "soapenv:Body")
+        action_elem = ET.SubElement(body, f"urn:{action}")
+
+        for key, value in body_params.items():
+            param = ET.SubElement(action_elem, key)
+            param.text = str(value)
+
+        return '<?xml version="1.0" encoding="UTF-8"?>\n' + ET.tostring(root, encoding='unicode')
+
     def authenticate(self, login: str, password: str) -> bool:
         """
         Аутентификация в системе Beeline через SOAP
         """
         url = f"{self.base_url}/api/AuthService"
-        
-        payload = f"""<soapenv:Envelope
-        xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
-        xmlns:urn="urn:uss-wsapi:Auth">
-        <soapenv:Header/>
-        <soapenv:Body>
-            <urn:auth>
-                <login>{login}</login>
-                <password>{password}</password>
-            </urn:auth>
-        </soapenv:Body>
-        </soapenv:Envelope>"""
+
+        payload = self._build_soap_envelope("Auth", "auth", {
+            "login": login,
+            "password": password
+        })
         
         headers = {
             "Content-Type": "text/xml; charset=utf-8",
-            "SUAPAction": '"urn:uss-wsapi:Auth:AuthInterface:authRequest"'
+            "SOAPAction": '"urn:uss-wsapi:Auth:AuthInterface:authRequest"'
         }
         
         try:
-            response = self.session.post(url, data=payload, headers=headers, timeout=self.timeout)
+            response = self.session.post(url, data=payload, headers=headers)
             response.raise_for_status()
             
             # Парсим XML ответ для извлечения токена
@@ -48,12 +69,12 @@ class BeelineClient:
             # Ищем тег <return> в любом пространстве имен
             token = None
             for elem in root.iter():
-                if elem.tag.endswith('return'):
+                if elem.tag.endswith('return') or elem.tag.endswith('session_id'):
                     token = elem.text
                     break
-                    
-            if token and len(token) > 5:
-                self.session_id = token
+
+            if token and len(str(token).strip()) > 5:
+                self.session_id = str(token).strip()
                 logger.info("Аутентификация Beeline успешна, получен session_id")
                 return True
                 
@@ -64,13 +85,16 @@ class BeelineClient:
             logger.error(f"HTTP ошибка при аутентификации Beeline: {e}. Ответ: {response.text[:200]}")
             return False
         except ET.ParseError as e:
-            logger.error(f"Ошибка парсинга XML ответа Beeline: {e}. Ответ: {response.text[:200]}")
+            logger.error(f"Ошибка парсинга XML ответа: {e}. Ответ: {response.text[:200]}")
+            return False
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Сетевая ошибка при аутентификации (таймаут, DNS и т.д.): {e}")
             return False
         except Exception as e:
             logger.error(f"Неожиданная ошибка аутентификации Beeline: {e}")
             return False
 
-    def _make_soap_request(self, endpoint: str, action: str, body_params: dict, namespace: str = "urn:uss-wsapi:Subscriber") -> Optional[Any]:
+    def _make_soap_request(self, interface: str, endpoint: str, action: str, namespace: str, body_params: Dict[str, Any]) -> Optional[Any]:
         """
         Универсальный метод для отправки SOAP запросов
         """
@@ -79,59 +103,63 @@ class BeelineClient:
             return None
             
         url = f"{self.base_url}/api/{endpoint}"
-        
-        # Формируем параметры для тела SOAP
-        params_xml = "".join([f"<{k}>{v}</{k}>" for k, v in body_params.items()])
-        
-        payload = f"""<soapenv:Envelope
-        xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
-        xmlns:urn="{namespace}">
-        <soapenv:Header/>
-        <soapenv:Body>
-            <urn:{action}>
-                {params_xml}
-                <token>{self.session_id}</token>
-            </urn:{action}>
-        </soapenv:Body>
-        </soapenv:Envelope>"""
-        
-        # SOAPAction может отличаться для разных методов, это шаблон
+
+        requests_params = body_params.copy()
+        requests_params["return"] = self.session_id
+
+        payload = self._build_soap_envelope(interface, action, requests_params)
+
         headers = {
             "Content-Type": "text/xml; charset=utf-8",
-            "SOAPAction": f'"urn:uss-wsapi:Subscriber:SubscriberInterface:{action}"'
+            "SOAPAction": f'"urn:uss-wsapi:{interface}:{interface}Interface:{action}Request"'
         }
-        
+
         try:
-            response = self.session.post(url, data=payload, headers=headers, timeout=self.timeout)
+            response = self.session.post(url, data=payload, headers=headers)
             response.raise_for_status()
-            
-            # Простой парсинг XML в словарь для удобства работы (требует xmltodict)
-            try:
-                import xmltodict
-                return xmltodict.parse(response.content)
-            except ImportError:
-                logger.warning("Модуль 'xmltodict' не установлен. Возвращаю сырой XML текст. Установите: pip install xmltodict")
+
+            if HAS_XMLTODICT:
                 return response.text
                 
         except requests.exceptions.HTTPError as e:
             logger.error(f"HTTP ошибка при запросе {action}: {e}. Ответ: {response.text[:200]}")
             return None
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Сетевая ошибка при запросе {action}: {e}")
+            return None
         except Exception as e:
-            logger.error(f"Ошибка запроса {action}: {e}")
+            logger.error(f"Ошибка запроса {action}: {e}", exc_info=True)
             return None
 
     def get_subscriber_info(self, phone_number: str) -> Optional[Any]:
-        return self._make_soap_request("SubscriberService", "getCTNInfoList", {"ctn": phone_number})
+        return self._make_soap_request(
+            interface="Subscriber",
+            endpoint="SubscriberService",
+            action="getCTNInfoList",
+            body_params={
+                "ctn": phone_number
+            }
+        )
 
     def get_payments(self, account_id: str, start_date: str, end_date: str) -> Optional[Any]:
-        return self._make_soap_request("SubscriberService", "getPaymentList", {
-            "ban": account_id,
-            "startDate": start_date,
-            "endDate": end_date
-        })
+        return self._make_soap_request(
+            interface="Subscriber",
+            endpoint="SubscriberService",
+            action="getPaymentList",
+            body_params={
+                "ban": account_id,
+                "startDate": start_date,
+                "endDate": end_date
+            }
+        )
 
     def change_tariff(self, phone_number: str, new_tariff_code: str) -> Optional[Any]:
-        return self._make_soap_request("SubscriberService", "changePP", {
-            "ctn": phone_number,
-            "newPPCode": new_tariff_code
-        })
+        return self._make_soap_request(
+            interface="Subscriber",
+            endpoint="SubscriberService",
+            action="changePP",
+            body_params={
+                "ctn": phone_number,
+                "newPPCode": new_tariff_code
+            }
+        )

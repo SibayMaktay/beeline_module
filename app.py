@@ -34,7 +34,7 @@ class TariffChangeRequest(BaseModel):
 beeline_client: Optional[BeelineClient] = None
 utm5_client: Optional[UTM5Client] = None
 
-TARFF_MAPPING = {
+TARIFF_MAPPING = {
     "BEELINE_TARIFF_1": 101,
     "BEELINE_TARIFF_2": 102,
 }
@@ -169,7 +169,7 @@ async def change_tariff(request: TariffChangeRequest):
         raise HTTPException(status_code=400, detail="Failed to change tariff in BeeLine")
 
     # 2. Маппинг тарифов (критически важно для интеграции разных систем)
-    utm5_tariff_id = TARFF_MAPPING.get(request.new_tariff_code)
+    utm5_tariff_id = TARIFF_MAPPING.get(request.new_tariff_code)
     if not utm5_tariff_id:
         logger.error(f"Не найден маппинг для тарифа: {request.new_tariff_code}")
         raise HTTPException(
