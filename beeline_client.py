@@ -163,3 +163,70 @@ class BeelineClient:
                 "newPPCode": new_tariff_code
             }
         )
+    def get_unbilled_balances(self, account_id: str) -> Optional[Any]:
+        """
+        Небиллингованный баланс лицевого счёта (getUnbilledBalances).
+        """
+        return self._make_soap_request(
+            interface="Subscriber",
+            endpoint="SubscriberService",
+            action="getUnbilledBalances",
+            body_params={
+                "ban": account_id
+            }
+        )
+
+    def manage_service(self, phone_number: str, soc_code: str, add: bool = True) -> Optional[Any]:
+        """
+        Подключение/отключение услуги (addDelSOC). add=True — подключить, False — отключить.
+        """
+        return self._make_soap_request(
+            interface="Subscriber",
+            endpoint="SubscriberService",
+            action="addDelSOC",
+            body_params={
+                "ctn": phone_number,
+                "soc": soc_code,
+                "action": "ADD" if add else "DEL"
+            }
+        )
+
+    def suspend_ctn(self, phone_number: str) -> Optional[Any]:
+        """
+        Добровольная блокировка номера (suspendCTN).
+        """
+        return self._make_soap_request(
+            interface="Subscriber",
+            endpoint="SubscriberService",
+            action="suspendCTN",
+            body_params={
+                "ctn": phone_number
+            }
+        )
+
+    def restore_ctn(self, phone_number: str) -> Optional[Any]:
+        """
+        Снятие блокировки номера (restoreCTN).
+        """
+        return self._make_soap_request(
+            interface="Subscriber",
+            endpoint="SubscriberService",
+            action="restoreCTN",
+            body_params={
+                "ctn": phone_number
+            }
+        )
+
+    def replace_sim(self, phone_number: str, new_sim: str) -> Optional[Any]:
+        """
+        Замена SIM-карты (replaceSIM).
+        """
+        return self._make_soap_request(
+            interface="Subscriber",
+            endpoint="SubscriberService",
+            action="replaceSIM",
+            body_params={
+                "ctn": phone_number,
+                "newSIM": new_sim
+            }
+        )

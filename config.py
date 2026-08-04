@@ -7,12 +7,14 @@ load_dotenv(dotenv_path=dotenv_path)
 
 beeline_login = os.getenv('BEELINE_LOGIN')
 beeline_password = os.getenv('BEELINE_PASSWORD')
-beeline_url_base = "https://my.beeline.ru"
+beeline_url_base = os.getenv('BEELINE_URL_BASE', "https://my.beeline.ru")
+# Секретный ключ для hash статичного ключа REST (может отсутствовать в демо)
+beeline_rest_signature = os.getenv('BEELINE_REST_SIGNATURE')
 
-utm5_api_url = "http://localhost"
+utm5_port = os.getenv('UTM5_PORT', "9080")
+utm5_api_url = os.getenv('UTM5_API_URL', f"http://127.0.0.1:{utm5_port}")
 utm5_login = os.getenv('UTM5_LOGIN')
 utm5_password = os.getenv('UTM5_PASSWORD')
-utm5_port = "9080"
 
 module_host = "127.0.0.1"
 module_port = "9090"
