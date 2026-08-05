@@ -52,7 +52,7 @@ TARIFF_MAPPING = {
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global beeline_client, utm5_client
+    global beeline_client, beeline_rest, utm5_client
     
     logger.info("Инициализация клиентов интеграции...")
     
@@ -78,8 +78,8 @@ async def lifespan(app: FastAPI):
     
     # Для Beeline аутентификация часто делается по запросу, 
     # но можно раскомментировать строку ниже, если нужен глобальный логин при старте:
-    beeline_client.authenticate(config.beeline_login, config.beeline_password)
-    beeline_rest.authenticate(config.beeline_login, config.beeline_password)
+    # beeline_client.authenticate(config.beeline_login, config.beeline_password)
+    # beeline_rest.authenticate(config.beeline_login, config.beeline_password)
 
     yield
 
@@ -226,7 +226,7 @@ async def get_rests(ctn:str):
         "data": data
     }
 
-@app.get("subscriptions/{ctn}", summary="Активные подписки абонента (REST)")
+@app.get("/subscriptions/{ctn}", summary="Активные подписки абонента (REST)")
 async def get_subscriptions(ctn: str):
     """
     Активные подписки абонента (REST)
@@ -308,13 +308,13 @@ async def unblock_ctn(ctn: str):
     }
 
 @app.post("/sim/replace", summary="Замена SIM-карты (replaceSIM)")
-async def unblock_ctn(ctn: str):
+async def replace_sim(request:SimReplaceRequest):
     """
-    Снятие блокировки номера (restoreCTN)
+    Замена SIM-карты (replaceSIM)
     """
-    data = beeline_client.restore_ctn(ctn)
+    data = beeline_client.replace_sim(request.phone_number, request.new_sim)
     if not data:
-        raise HTTPException(status_code=502,detail="Failed to restore CTN")
+        raise HTTPException(status_code=502,detail="Failed to replace SIM")
     return {
         "status": "success",
         "data": data

@@ -32,50 +32,50 @@ def test_health(client):
 
 def test_rests(client):
     appmod.beeline_rest.get_rests.return_value = {"data": [{"name": "GB", "value": 10}]}
-    r = client.get("/rests/9608029838")
+    r = client.get("/rests/79608029838")
     assert r.status_code == 200
     assert r.json()["data"]["data"][0]["value"] == 10
-    appmod.beeline_rest.get_rests.assert_called_once_with("9608029838")
+    appmod.beeline_rest.get_rests.assert_called_once_with("79608029838")
 
 def test_subscriptions(client):
     appmod.beeline_rest.get_subscriptions.return_value = {"subs": []}
-    r = client.get("/subscriptions/9608029838")
+    r = client.get("/subscriptions/79608029838")
     assert r.status_code == 200 and r.json()["status"] == "success"
 
 def test_callforward(client):
     appmod.beeline_rest.get_call_forward.return_value = {"forward": "off"}
-    r = client.get("/callforward/9608029838")
+    r = client.get("/callforward/79608029838")
     assert r.status_code == 200
 
 def test_rests_upstream_error(client):
     appmod.beeline_rest.get_rests.return_value = None
-    r = client.get("/rests/9608029838")
+    r = client.get("/rests/79608029838")
     assert r.status_code == 502
 
 def test_balance(client):
     appmod.beeline_client.get_unbilled_balances.return_value = {"balance": 100}
-    r = client.get("/balance/BAN123")
+    r = client.get("/balance/906144076")
     assert r.status_code == 200
-    appmod.beeline_client.get_unbilled_balances.assert_called_once_with("BAN123")
+    appmod.beeline_client.get_unbilled_balances.assert_called_once_with("906144076")
 
 def test_service_add(client):
     appmod.beeline_client.manage_service.return_value = {"ok": True}
-    r = client.post("/service", json={"phone_number": "960", "soc_code": "SOC1", "add": True})
+    r = client.post("/service", json={"phone_number": "79608029838", "soc_code": "EXCLH12", "add": True})
     assert r.status_code == 200
     assert r.json()["action"] == "ADD"
-    appmod.beeline_client.manage_service.assert_called_once_with("960", "SOC1", True)
+    appmod.beeline_client.manage_service.assert_called_once_with("79608029838", "EXCLH12", True)
 
 def test_block_unblock(client):
     appmod.beeline_client.suspend_ctn.return_value = {"ok": 1}
     appmod.beeline_client.restore_ctn.return_value = {"ok": 1}
-    assert client.post("/block/960").status_code == 200
-    assert client.post("/unblock/960").status_code == 200
+    assert client.post("/block/79608029838").status_code == 200
+    assert client.post("/unblock/79608029838").status_code == 200
 
 def test_sim_replace(client):
     appmod.beeline_client.replace_sim.return_value = {"ok": 1}
-    r = client.post("/sim/replace", json={"phone_number": "960", "new_sim": "8970123"})
+    r = client.post("/sim/replace", json={"phone_number": "79608029838", "new_sim": "897019924111165944"})
     assert r.status_code == 200
-    appmod.beeline_client.replace_sim.assert_called_once_with("960", "8970123")
+    appmod.beeline_client.replace_sim.assert_called_once_with("79608029838", "897019924111165944")
 
 def test_auth_beeline(client):
     appmod.beeline_client.authenticate.return_value = True
@@ -86,5 +86,5 @@ def test_tariff_change_unknown_code(client):
     # неизвестный код тарифа -> 400 (нет маппинга)
     appmod.beeline_client.change_tariff.return_value = {"ok": 1}
     r = client.post("/tariff/change", json={
-        "phone_number": "960", "new_tariff_code": "NOPE", "utm5_user_id": 1})
+        "phone_number": "79608029838", "new_tariff_code": "NOPE", "utm5_user_id": 1})
     assert r.status_code == 400

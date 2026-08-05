@@ -94,7 +94,7 @@ class BeelineClient:
             logger.error(f"Неожиданная ошибка аутентификации Beeline: {e}")
             return False
 
-    def _make_soap_request(self, interface: str, endpoint: str, action: str, namespace: str, body_params: Dict[str, Any]) -> Optional[Any]:
+    def _make_soap_request(self, interface: str, endpoint: str, action: str, body_params: Dict[str, Any]) -> Optional[Any]:
         """
         Универсальный метод для отправки SOAP запросов
         """
@@ -119,6 +119,8 @@ class BeelineClient:
             response.raise_for_status()
 
             if HAS_XMLTODICT:
+                return xmltodict.parse(response.text)
+            else:
                 return response.text
                 
         except requests.exceptions.HTTPError as e:
