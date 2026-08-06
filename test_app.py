@@ -79,7 +79,7 @@ def test_sim_replace(client):
 
 def test_auth_beeline(client):
     appmod.beeline_client.authenticate.return_value = True
-    r = client.post("/auth/beeline", json={"login": "l", "password": "p"})
+    r = client.post("/auth/beeline", json={"login": f"{config.beeline_login}", "password": f"{config.beeline_password}"})
     assert r.status_code == 200 and r.json()["status"] == "success"
 
 def test_tariff_change_unknown_code(client):

@@ -46,8 +46,9 @@ beeline_rest: Optional[BeelineRestClient] = None
 utm5_client: Optional[UTM5Client] = None
 
 TARIFF_MAPPING = {
-    "BEELINE_TARIFF_1": 101,
-    "BEELINE_TARIFF_2": 102,
+    "BEELINE_TARIFF_1": "EXCLH11",
+    "BEELINE_TARIFF_2": "EXCLH12",
+    "BEELINE_TARIFF_3": "EXCLH13",
 }
 
 @asynccontextmanager
@@ -326,9 +327,11 @@ async def health_check():
     Проверка работоспособности модуля
     """
     is_utm5_ready = utm5_client is not None and utm5_client.session_id is not None
+    is_beeline_ready = beeline_client is not None and beeline_client.session_id is not None
 
     return {
         "status": "healthy",
         "service": "beeline-utm5-integration",
-        "utm5_authenticated": is_utm5_ready
+        "utm5_authenticated": is_utm5_ready,
+        "beeline_authenticated": is_beeline_ready
     }
