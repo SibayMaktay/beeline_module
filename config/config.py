@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 
-dotenv_path = '.env'
+dotenv_path = './config/.env'
 
 load_dotenv(dotenv_path=dotenv_path)
 

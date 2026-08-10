@@ -69,8 +69,33 @@ def get_beeline_token() -> str:
                     return _beeline_session_id
                     
         logger.error("Токен не найден в ответе raw SOAP запроса.")
+
     except Exception as e:
         logger.error(f"Raw SOAP аутентификация также не удалась: {e}")
+        logger.warning(f"Zeep аутентификация не удалась: {e}. Переход к Variant 3...")
+
+    # ВАРИАНТ 3: REST API string
+    try:
+        logger.debug("Variant 3: Trying raw REST request with string...")
+
+        url = f"{config.beeline_url_base}/api/1.0/auth"
+        try:
+            response = session.get(url, params={"login": config.beeline_login, "password": config.beeline_password})
+            response.raise_for_status()
+            data = response.json()
+            _beeline_session_id = data.get("token") or (data.get("meta") or {}).get("token")
+            if _beeline_session_id:
+                session.cookies.get("token", _beeline_session_id)
+                logger.info("REST Beeline: token получен")
+                return True
+            logger.warning(f"REST Beeline: token не найден. Ответ: {response.text[:200]}")
+            return False
+        except requests.exceptions.RequestException as e:
+            logger.error(f"REST Beeline auth ошибка: {e}")
+            return False
+        
+    except Exception as e:
+        logger.error(f"Raw REST аутентификация также не удалась: {e}")
 
     raise Exception("Не удалось получить токен Beeline ни одним из доступных методов.")
 

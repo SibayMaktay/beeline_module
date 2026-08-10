@@ -8,6 +8,7 @@ from typing import Optional, Any, Dict, List
 from client.beeline_soap_client import get_subscriber_info, get_payments, change_tariff, get_unbilled_balances, manage_service, suspend_ctn, restore_ctn, replace_sim
 from client.beeline_rest_client import BeelineRestClient
 from client.utm5_client import UTM5Client
+from token_api.token_beeline import get_beeline_token, invalidate_token
 
 logging.basicConfig(
     level=logging.INFO,
@@ -69,7 +70,7 @@ async def lifespan(app: FastAPI):
     
     # Для Beeline аутентификация часто делается по запросу, 
     # но можно раскомментировать строку ниже, если нужен глобальный логин при старте:
-    # beeline_client.authenticate(config.beeline_login, config.beeline_password)
+    get_beeline_token()
     # beeline_rest.authenticate(config.beeline_login, config.beeline_password)
 
     yield

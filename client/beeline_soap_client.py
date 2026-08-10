@@ -2,7 +2,7 @@ import logging
 import requests
 from typing import Optional, Any, Dict
 import config.config as config
-from token.token_beeline import get_beeline_token, invalidate_token
+from token_api.token_beeline import get_beeline_token, invalidate_token
 from templates.wsdl_template_beeline import (
     get_ctn_info_template,
     get_payment_list_template,
