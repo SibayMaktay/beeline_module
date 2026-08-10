@@ -1,9 +1,9 @@
 import logging
 import requests
 from typing import Optional, Any, Dict
-import config
-from token_beeline import get_beeline_token, invalidate_token
-from wsdl_template_beeline import (
+import config.config as config
+from token.token_beeline import get_beeline_token, invalidate_token
+from templates.wsdl_template_beeline import (
     get_ctn_info_template,
     get_payment_list_template,
     change_pp_template,

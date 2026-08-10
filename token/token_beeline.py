@@ -5,8 +5,8 @@ from zeep import Client
 from zeep.transports import Transport
 from requests import Session
 
-import config
-from wsdl_template_beeline import get_auth_template
+import config.config as config
+from templates.wsdl_template_beeline import get_auth_template
 
 logger = logging.getLogger(__name__)
 

@@ -1,13 +1,13 @@
-import config
+import config.config as config
 import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, Depends, Header
 from pydantic import BaseModel
 from typing import Optional, Any, Dict, List
 
-from beeline_soap_client import get_subscriber_info, get_payments, change_tariff, get_unbilled_balances, manage_service, suspend_ctn, restore_ctn, replace_sim
-from beeline_rest_client import BeelineRestClient
-from utm5_client import UTM5Client
+from client.beeline_soap_client import get_subscriber_info, get_payments, change_tariff, get_unbilled_balances, manage_service, suspend_ctn, restore_ctn, replace_sim
+from client.beeline_rest_client import BeelineRestClient
+from client.utm5_client import UTM5Client
 
 logging.basicConfig(
     level=logging.INFO,
