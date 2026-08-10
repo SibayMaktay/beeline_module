@@ -7,8 +7,8 @@ from unittest.mock import MagicMock
 import pytest
 from fastapi.testclient import TestClient
 
-import beeline_client, beeline_rest_client, utm5_client
-beeline_client.BeelineClient.authenticate = lambda self, *a, **k: True
+import beeline_soap_client, beeline_rest_client, utm5_client
+beeline_soap_client.BeelineClient.authenticate = lambda self, *a, **k: True
 beeline_rest_client.BeelineRestClient.authenticate = lambda self, *a, **k: True
 utm5_client.UTM5Client.authenticate = lambda self, *a, **k: True
 

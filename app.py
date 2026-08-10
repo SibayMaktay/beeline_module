@@ -1,11 +1,11 @@
 import config
 import logging
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends, Header
 from pydantic import BaseModel
 from typing import Optional, Any, Dict, List
 
-from beeline_client import BeelineClient
+from beeline_soap_client import get_subscriber_info, get_payments, change_tariff, get_unbilled_balances, manage_service, suspend_ctn, restore_ctn, replace_sim
 from beeline_rest_client import BeelineRestClient
 from utm5_client import UTM5Client
 
@@ -16,10 +16,6 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Модели данных
-class AuthRequest(BaseModel):
-    login: str
-    password: str
-
 class PaymentSyncRequest(BaseModel):
     phone_number: str
     account_id: str
@@ -36,12 +32,8 @@ class ServiceRequest(BaseModel):
     soc_code: str
     add: bool = True
 
-class SimReplaceRequest(BaseModel):
-    phone_number: str
-    new_sim: str
-
 # Глобальные экземпляры клиентов
-beeline_client: Optional[BeelineClient] = None
+beeline_soap_get_subscriber_info: Optional[get_subscriber_info] = None
 beeline_rest: Optional[BeelineRestClient] = None
 utm5_client: Optional[UTM5Client] = None
 
@@ -51,16 +43,14 @@ TARIFF_MAPPING = {
     "BEELINE_TARIFF_3": "EXCLH13",
 }
 
+def verify_api_key(x_api_key: str = Header(..., alias="X-API-Key")):
+    if x_api_key != config.api_key:
+        raise HTTPException(status_code=403, detail="Invalid API key")
+    return x_api_key
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global beeline_client, beeline_rest, utm5_client
-    
     logger.info("Инициализация клиентов интеграции...")
-    
-    # Теперь передаем только базовый URL
-    beeline_client = BeelineClient(
-        base_url=config.beeline_url_base
-    )
 
     beeline_rest = BeelineRestClient(
         base_url=config.beeline_url_base,
@@ -94,33 +84,23 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-@app.post("/auth/beeline", summary="Аутентификация в BeeLine")
-async def authenticate_beeline(request: AuthRequest):
-    """
-    Аутентификация в BeeLine
-    """
-    success = beeline_client.authenticate(request.login, request.password)
-    if success:
-        return {"status": "success", "message": "Authenticated"}
-    raise HTTPException(status_code=401, detail="Authentication failed")
-
 @app.get("/subscriber/{phone_number}", summary="Получение информации об абоненте")
-async def get_subscriber_info(phone_number: str):
+async def get_subscriber(phone_number: str, api_key: str = Depends (verify_api_key)):
     """
     Получение информации об абоненте из BeeLine
     """
-    info = beeline_client.get_subscriber_info(phone_number)
-    if info:
-        return {"status": "success", "data": info}
-    raise HTTPException(status_code=404, detail="Subscriber not found or error occurred")
+    info = get_subscriber_info(phone_number)
+    if not info:
+        raise HTTPException(status_code=404, detail="Failed to get subscriber info from Beeline")
+    return {"status": "success", "data": info}
 
 @app.post("/sync/payments", summary="Синхронизация платежей из BeeLine в UTM5")
-async def sync_payments(request: PaymentSyncRequest):
+async def sync_payments(request: PaymentSyncRequest, api_key: str = Depends(verify_api_key)):
     """
     Синхринизация платежей из BeeLine в UTM5
     """
     # 1. Получаем платежи из Beeline
-    payments = beeline_client.get_payments(
+    payments = get_payments(
         request.account_id,
         request.start_date,
         request.end_date
@@ -174,12 +154,12 @@ async def sync_payments(request: PaymentSyncRequest):
     }
 
 @app.post("/tariff/change", summary="Смена тарифа: Beeline -> UTM5")
-async def change_tariff(request: TariffChangeRequest):
+async def change_tariff_endpoint(request: TariffChangeRequest, api_key: str = Depends(verify_api_key)):
     """
     Смена тарифа: BeeLine -> UTM5
     """
     # 1. Меняем тариф в Beeline
-    beeline_result = beeline_client.change_tariff(
+    beeline_result = change_tariff(
         request.phone_number,
         request.new_tariff_code
     )
@@ -256,11 +236,11 @@ async def get_call_forward(ctn: str):
 # ---------- SOAP Beeline (USS WSAPI) ----------
 
 @app.get("/balance/{account_id}", summary="Небиллингованный баланс лицевого счёта (SOAP)")
-async def get_balance(account_id: str):
+async def get_balance(account_id: str, api_key: str = Depends (verify_api_key)):
     """
     Небиллингованный баланс лицевого счёта (SOAP)
     """
-    data = beeline_client.get_unbilled_balances(account_id)
+    data = get_unbilled_balances(account_id)
     if not data:
         raise HTTPException(status_code=502,detail="Beeline SOAP error")
     return {
@@ -269,11 +249,11 @@ async def get_balance(account_id: str):
     }
 
 @app.post("/service", summary="Подключение/отключение услуги (addDelSOC)")
-async def manage_service(request: ServiceRequest):
+async def manage_service_1(request: ServiceRequest, api_key: str = Depends (verify_api_key)):
     """
     Подключение/отключение услуги (addDelSOC)
     """
-    data = beeline_client.manage_service(request.phone_number, request.soc_code, request.add)
+    data = manage_service(request.phone_number, request.soc_code, request.add)
     if not data:
         raise HTTPException(status_code=502,detail="Failed to manage service in Beeline")
     return {
@@ -283,11 +263,11 @@ async def manage_service(request: ServiceRequest):
     }
 
 @app.post("/block/{ctn}", summary="Добровольная блокировка номера (suspendCTN)")
-async def block_ctn(ctn: str):
+async def block_ctn(ctn: str, api_key: str = Depends(verify_api_key)):
     """
     Добровольная блокировка номера (suspendCTN)
     """
-    data = beeline_client.suspend_ctn(ctn)
+    data = suspend_ctn(ctn)
     if not data:
         raise HTTPException(status_code=502,detail="Failed to suspend CTN")
     return {
@@ -296,11 +276,11 @@ async def block_ctn(ctn: str):
     }
 
 @app.post("/unblock/{ctn}", summary="Снятие блокировки номера (restoreCTN)")
-async def unblock_ctn(ctn: str):
+async def unblock_ctn(ctn: str, api_key: str = Depends(verify_api_key)):
     """
     Снятие блокировки номера (restoreCTN)
     """
-    data = beeline_client.restore_ctn(ctn)
+    data = restore_ctn(ctn)
     if not data:
         raise HTTPException(status_code=502,detail="Failed to restore CTN")
     return {
@@ -309,11 +289,11 @@ async def unblock_ctn(ctn: str):
     }
 
 @app.post("/sim/replace", summary="Замена SIM-карты (replaceSIM)")
-async def replace_sim(request:SimReplaceRequest):
+async def replace_sim_1(ctn: str, new_sim: str, api_key: str = Depends(verify_api_key)):
     """
     Замена SIM-карты (replaceSIM)
     """
-    data = beeline_client.replace_sim(request.phone_number, request.new_sim)
+    data = replace_sim(ctn, new_sim)
     if not data:
         raise HTTPException(status_code=502,detail="Failed to replace SIM")
     return {
@@ -327,11 +307,11 @@ async def health_check():
     Проверка работоспособности модуля
     """
     is_utm5_ready = utm5_client is not None and utm5_client.session_id is not None
-    is_beeline_ready = beeline_client is not None and beeline_client.session_id is not None
+    # is_beeline_ready = token_beeline is not None and beeline.session_id is not None
 
     return {
         "status": "healthy",
         "service": "beeline-utm5-integration",
         "utm5_authenticated": is_utm5_ready,
-        "beeline_authenticated": is_beeline_ready
+        # "beeline_authenticated": is_beeline_ready
     }
