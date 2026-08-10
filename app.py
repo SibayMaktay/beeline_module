@@ -9,6 +9,7 @@ from client.beeline_soap_client import get_subscriber_info, get_payments, change
 from client.beeline_rest_client import BeelineRestClient
 from client.utm5_client import UTM5Client
 from token_api.token_beeline import get_beeline_token, invalidate_token
+from token_api.token_utm5 import get_utm5_token
 
 logging.basicConfig(
     level=logging.INFO,
@@ -65,7 +66,9 @@ async def lifespan(app: FastAPI):
     )
     
     # Автоматическая аутентификация при старте
-    if not utm5_client.authenticate():
+    # if not utm5_client.authenticate():
+    #     logger.warning("Не удалось аутентифицироваться в UTM5 при запуске.")
+    if not get_utm5_token():
         logger.warning("Не удалось аутентифицироваться в UTM5 при запуске.")
     
     # Для Beeline аутентификация часто делается по запросу, 
