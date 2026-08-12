@@ -7,39 +7,22 @@ from typing import Optional, Any, Dict, List
 logger = logging.getLogger(__name__)
 
 class BeelineRestClient:
-    def __init__(self, base_url: str, signature: Optional[str] = None, timeout: int = 30):
+    def __init__(self, base_url: str, signature: Optional[str] = None, token: Optional[str] = None, timeout: int = 30):
         self.base_url = base_url.rstrip('/')
         self.signature = signature          # секретный ключ для hash (может отсутствовать в демо)
-        self.token: Optional[str] = None
+        self.token = token
         self.timeout = timeout
         self.session = requests.Session()
 
     # ---------- auth ----------
-    def authenticate(self, login: str, password: str) -> bool:
+    def set_token(self, token: str):
         """
-        GET /1.0/auth?login&password -> token (кладём в cookie 'token').
+        Позволяет передавать токен извне.
         """
-        url = f"{self.base_url}/api/1.0/auth"
-        try:
-            r = self.session.get(url, params={"login": login, "password": password}, timeout=self.timeout)
-            r.raise_for_status()
-            data = r.json()
-            self.token = data.get("token") or (data.get("meta") or {}).get("token")
-            if self.token:
-                self.session.cookies.set("token", self.token)
-                logger.info("REST Beeline: token получен")
-                return True
-            logger.warning(f"REST Beeline: token не найден. Ответ: {r.text[:200]}")
-            return False
-        except requests.exceptions.RequestException as e:
-            logger.error(f"REST Beeline auth ошибка: {e}")
-            return False
+        self.token = token
+        self.session.cookies.set("token", token)
 
-    # ---------- hash ----------
     def _hash(self, values: List[str]) -> Optional[str]:
-        """
-        HMAC_SHA1(конкатенация значений, signature) в hex. None если signature не задан.
-        """
         if not self.signature:
             return None
         msg = "".join(str(v) for v in values)

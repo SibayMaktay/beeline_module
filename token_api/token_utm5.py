@@ -1,18 +1,13 @@
 import requests
 import logging
-from typing import Optional, Any
+from typing import Optional
 
 import config.config as config
 
 logger = logging.getLogger(__name__)
-
-# Глобальная переменная для кэширования токена (в продакшене лучше использовать Redis или память с TTL)
 _utm5_session_id = None
 
-def get_utm5_token() -> str:
-    """
-    Аутентификация в UTM5 и получение session_id
-    """
+def get_utm5_token() -> Optional[str]:
     global _utm5_session_id
     if _utm5_session_id:
         return _utm5_session_id
@@ -22,40 +17,32 @@ def get_utm5_token() -> str:
     try:
         session = requests.Session()
         session.timeout = 15
-        response = requests.session.post(
+        response = session.post(
             f"{config.utm5_api_url}/api/login",
-            json={'username': config.beeline_login, 'password': config.beeline_password},
+            json={'username': config.utm5_login, 'password': config.utm5_password},
             headers={'Content-Type':'application/json'}
         )
         response.raise_for_status()
         data = response.json()
 
-        _utm5_session_id = data.get('_utm5_session_id')
+        _utm5_session_id = data.get('session_id')
 
-        if not _utm5_session_id and '_utm5_session_id' in session.cookies:
-            _utm5_session_id = session.cookies['_utm5_session_id']
+        if not _utm5_session_id and 'session_id' in session.cookies:
+            _utm5_session_id = session.cookies['session_id']
 
         if _utm5_session_id:
             logger.info("Аутентификация в UTM5 успешна")
-            return True
+            return _utm5_session_id
 
-        logger.warning("Аутентификация не удалось: _utm5_sessoin_id не получен в ответе")
-        return False
+        logger.warning("Аутентификация не удалась: session_id не получен в ответе")
+        return None
 
     except requests.exceptions.HTTPError as e:
         logger.error(f"HTTP ошибка при аутентификации: {e}. Ответ: {response.text}")
-        return False
-    except requests.exceptions.RequestException as e:
+        return None
+    except requests.exceptions.RequestException:
         logger.error(f"Сетевая ошибка аутентификации")
-        return False
+        return None
     except Exception as e:
         logger.error(f"Ошибка получения session_id: {e}")
-        return False
-
-def _ensure_utm5_token(self) -> bool:
-    """
-    Вспомогательный метод: проверяет и выполняет аутентификацию при необходимости
-    """
-    if not _utm5_session_id:
-        return get_utm5_token()
-    return True
+        return None
