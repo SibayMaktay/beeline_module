@@ -1,8 +1,12 @@
-from templates.wsdl_template_beeline import *
+from wsdl_template_beeline import *
 
 # Max method parametrs
 
 print(
+    get_auth_template(
+        login="QWERTY",
+        password="12345678"
+    ),
     restore_ctn_template(
         ctn="7000333", reason_code="REAS-77", session_id="ABCD-1234", login="QWERTY", actv_date="2024-07-01"
     ),
@@ -79,7 +83,7 @@ print(
         ctn="7000333", soc="SOC-912", inclusion_type="add", session_id="ABCD-1234", eff_date="2024-07-01", exp_date="2024-12-31", login="QWERTY"
     ),
     change_pp_template(
-        ctn="7000333", pricePlan="NEWPLAN", session_id="ABCD-1234", futureDate="2024-08-01", login="QWERTY", freeChange="true"
+        ctn="7000333", price_plan="NEWPLAN", session_id="ABCD-1234", future_date="2024-08-01", login="QWERTY", free_change="true"
     ),
     get_ban_info_list_template(
         session_id="ABCD-1234", login="QWERTY"

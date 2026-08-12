@@ -1,5 +1,6 @@
-xml_head_template = """
-<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/" xmlns:urn="urn:uss-wsapi:{interface}">
+xml_head_template = """<soapenv:Envelope
+xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
+xmlns:urn="urn:uss-wsapi:{interface}">
     <soapenv:Header/>
     <soapenv:Body>
         <urn:{action}>"""
