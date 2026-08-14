@@ -44,6 +44,8 @@ def _make_soap_request(xml_payload: str, action: str) -> Optional[Any]:
         return None
 
 class BeelineSoapClient:
+    def __init__(self, token_provider):
+        self.token_provider = token_provider
 
     def get_ctn_info_list(
         self,
@@ -53,7 +55,7 @@ class BeelineSoapClient:
         """
         Получения информации об абонентах на уровне BAN/CTN.
         """
-        session_id = get_beeline_token()
+        session_id = self.token_provider() # get_beeline_token()
         xml = get_ctn_info_list_template(
             ban=ban,
             session_id=session_id,
@@ -75,7 +77,7 @@ class BeelineSoapClient:
         """
         Получения информации об абонентах на уровне BAN/CTN.
         """
-        session_id = get_beeline_token()
+        session_id = self.token_provider()
         xml = get_ctn_info_list_paged_template(
             ban=ban,
             session_id=session_id,
@@ -99,7 +101,7 @@ class BeelineSoapClient:
         """
         Получение списка платежей.
         """
-        session_id = get_beeline_token()
+        session_id = self.token_provider()
         xml = get_payment_list_template(
             ban=ban,
             start_date=start_date,
@@ -125,7 +127,7 @@ class BeelineSoapClient:
         """
         Получение списка платежей.
         """
-        session_id = get_beeline_token()
+        session_id = self.token_provider()
         xml = get_payment_list_paged_template(
             ban=ban,
             start_date=start_date,
@@ -151,7 +153,7 @@ class BeelineSoapClient:
         """
         Смена тарифного плана.
         """
-        session_id = get_beeline_token()
+        session_id = self.token_provider()
         xml = change_pp_template(
             ctn=ctn,
             price_plan=price_plan,
@@ -171,7 +173,7 @@ class BeelineSoapClient:
         """
         Небиллингованный баланс лицевого счёта (getUnbilledBalances).
         """
-        session_id = get_beeline_token()
+        session_id = self.token_provider()
         xml = get_unbilled_balance_template(
             ctn=ctn,
             session_id=session_id,
@@ -193,7 +195,7 @@ class BeelineSoapClient:
         """
         Подключение/отключение услуги (addDelSOC). add=True — подключить, False — отключить.
         """
-        session_id = get_beeline_token()
+        session_id = self.token_provider()
         xml = add_del_soc_template(
             ctn=ctn,
             soc=soc,
@@ -217,7 +219,7 @@ class BeelineSoapClient:
         """
         Добровольная блокировка номера (suspendCTN).
         """
-        session_id = get_beeline_token()
+        session_id = self.token_provider()
         xml = suspend_ctn_template(
             ctn=ctn,
             reason_code=reason_code,
@@ -239,7 +241,7 @@ class BeelineSoapClient:
         """
         Снятие блокировки номера (restoreCTN).
         """
-        session_id = get_beeline_token()
+        session_id = self.token_provider()
         xml = restore_ctn_template(
             ctn=ctn,
             reason_code=reason_code,
@@ -260,7 +262,7 @@ class BeelineSoapClient:
         """
         Замена SIM-карты (replaceSIM).
         """
-        session_id = get_beeline_token()
+        session_id = self.token_provider()
         xml = replace_sim_template(
             ctn=ctn,
             serial_number=serial_number,
@@ -276,7 +278,7 @@ class BeelineSoapClient:
         self,
         request_id: str
     ) -> Optional[Any]:
-        session_id = get_beeline_token()
+        session_id = self.token_provider()
         xml = get_details_template(
             session_id=session_id,
             request_id=request_id,
@@ -295,7 +297,7 @@ class BeelineSoapClient:
         request_id: str = None,
         records_per_page: str = None
     ) -> Optional[Any]:
-        session_id = get_beeline_token()
+        session_id = self.token_provider()
         xml = get_request_list_template(
             session_id=session_id,
             page=page,
@@ -314,7 +316,7 @@ class BeelineSoapClient:
         self,
         request_id: str
     ) -> Optional[Any]:
-        session_id = get_beeline_token()
+        session_id = self.token_provider()
         xml = get_bill_calls_template(
             session_id=session_id,
             request_id=request_id,
@@ -331,7 +333,7 @@ class BeelineSoapClient:
         start_date: str,
         end_date: str
     ) -> Optional[Any]:
-        session_id = get_beeline_token()
+        session_id = self.token_provider()
         xml = get_adjustment_list_template(
             session_id=session_id,
             ban=ban,
@@ -348,7 +350,7 @@ class BeelineSoapClient:
         self,
         request_id: str
     ) -> Optional[Any]:
-        session_id = get_beeline_token()
+        session_id = self.token_provider()
         xml = get_bill_charges_template(
             session_id=session_id,
             request_id=request_id,
@@ -365,7 +367,7 @@ class BeelineSoapClient:
         page: int = None,
         records_per_page: str = None
     ) -> Optional[Any]:
-        session_id = get_beeline_token()
+        session_id = self.token_provider()
         xml = get_bill_charges_paged_template(
             session_id=session_id,
             request_id=request_id,
@@ -383,7 +385,7 @@ class BeelineSoapClient:
         ban: str,
         ctn: str = None
     ) -> Optional[Any]:
-        session_id = get_beeline_token()
+        session_id = self.token_provider()
         xml = get_sim_list_template(
             session_id=session_id,
             ban=ban,
@@ -402,7 +404,7 @@ class BeelineSoapClient:
         ctn: str = None,
         records_per_page: str = None
     ) -> Optional[Any]:
-        session_id = get_beeline_token()
+        session_id = self.token_provider()
         xml = get_sim_list_paged_template(
             session_id=session_id,
             ban=ban,
@@ -421,7 +423,7 @@ class BeelineSoapClient:
         ban: str,
         ctn: str = None
     ) -> Optional[Any]:
-        session_id = get_beeline_token()
+        session_id = self.token_provider()
         xml = get_services_list_template(
             session_id=session_id,
             ban=ban,
@@ -440,7 +442,7 @@ class BeelineSoapClient:
         ctn: str = None,
         ctn_amount_per_page: str = None
     ) -> Optional[Any]:
-        session_id = get_beeline_token()
+        session_id = self.token_provider()
         xml = get_services_list_paged_template(
             session_id=session_id,
             ban=ban,
@@ -458,7 +460,7 @@ class BeelineSoapClient:
         self,
         ctn: str
     ) -> Optional[Any]:
-        session_id = get_beeline_token()
+        session_id = self.token_provider()
         xml = get_unbilled_calls_list_template(
             session_id=session_id,
             ctn=ctn,
@@ -481,7 +483,7 @@ class BeelineSoapClient:
         """
         Добавление списка номеров в shared DOL.
         """
-        session_id = get_beeline_token()
+        session_id = self.token_provider()
         xml = add_shared_number_list_dol_template(
             session_id=session_id,
             ctn_from=ctn_from,
@@ -505,7 +507,7 @@ class BeelineSoapClient:
         """
         Удаление списка номеров из shared DOL.
         """
-        session_id = get_beeline_token()
+        session_id = self.token_provider()
         xml = delete_shared_number_list_dol_template(
             session_id=session_id,
             ctn_from=ctn_from,
@@ -524,7 +526,7 @@ class BeelineSoapClient:
         """
         Обновление персональных данных.
         """
-        session_id = get_beeline_token()
+        session_id = self.token_provider()
         xml = personal_data_update_template(
             session_id=session_id,
             data=data,
@@ -542,7 +544,7 @@ class BeelineSoapClient:
         """
         Получение результата обновления персональных данных.
         """
-        session_id = get_beeline_token()
+        session_id = self.token_provider()
         xml = personal_data_result_template(
             session_id=session_id,
             request_id=request_id,
@@ -562,7 +564,7 @@ class BeelineSoapClient:
         """
         Получение отчета о данных.
         """
-        session_id = get_beeline_token()
+        session_id = self.token_provider()
         xml = get_data_report_template(
             session_id=session_id,
             request_id=request_id,
@@ -575,13 +577,13 @@ class BeelineSoapClient:
             "urn:uss-wsapi:Subscriber:SubscriberInterface:getDataReportRequest"
         )
 
-    def get_baninfo_list(
+    def get_ban_info_list(
         self,
     ) -> Optional[Any]:
         """
         Получение информации о BAN по логину.
         """
-        session_id = get_beeline_token()
+        session_id = self.token_provider()
         xml = get_ban_info_list_template(
             session_id=session_id,
             login=config.beeline_login
@@ -603,7 +605,7 @@ class BeelineSoapClient:
         """
         Добавление одного номера в shared DOL.
         """
-        session_id = get_beeline_token()
+        session_id = self.token_provider()
         xml = add_shared_number_dol_template(
             session_id=session_id,
             request_id=request_id,
@@ -627,7 +629,7 @@ class BeelineSoapClient:
         """
         Запрос звонков по счёту.
         """
-        session_id = get_beeline_token()
+        session_id = self.token_provider()
         xml = create_bill_calls_request_template(
             session_id=session_id,
             ban=ban,
@@ -649,7 +651,7 @@ class BeelineSoapClient:
         """
         Запрос начислений по счёту.
         """
-        session_id = get_beeline_token()
+        session_id = self.token_provider()
         xml = create_bill_charges_request_template(
             session_id=session_id,
             ban=ban,
@@ -674,7 +676,7 @@ class BeelineSoapClient:
         """
         Создать детализацию.
         """
-        session_id = get_beeline_token()
+        session_id = self.token_provider()
         xml = create_details_request_template(
             session_id=session_id,
             ctn=ctn,
@@ -698,7 +700,7 @@ class BeelineSoapClient:
         """
         Получить BAN с пагинацией.
         """
-        session_id = get_beeline_token()
+        session_id = self.token_provider()
         xml = get_ban_info_list_paged_template(
             session_id=session_id,
             login=config.beeline_login,
@@ -719,7 +721,7 @@ class BeelineSoapClient:
         """
         Получить звонки с пагинацией.
         """
-        session_id = get_beeline_token()
+        session_id = self.token_provider()
         xml = get_bill_calls_paged_template(
             session_id=session_id,
             request_id=request_id,
@@ -741,7 +743,7 @@ class BeelineSoapClient:
         """
         Получить данные о абоненте.
         """
-        session_id = get_beeline_token()
+        session_id = self.token_provider()
         xml = get_data_template(
             session_id=session_id,
             login=config.beeline_login,

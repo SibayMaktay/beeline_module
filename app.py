@@ -64,14 +64,16 @@ def get_beeline_rest_client():
 def get_beeline_soap_client():
     # СВОЙ BeelineSoapClient реализуй! (или импортируй актуальный)
     return BeelineSoapClient(
-        base_url=config.beeline_url_base,
-        token_provider=get_beeline_token
+        token_provider=get_beeline_token()
     )
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Старт интеграции...")
-    get_utm5_token()
+    try:
+        get_utm5_token()
+    except Exception as e:
+        logger.warning(f"UTM5 аутентификация не удалась на старте: {e}")
     try:
         get_beeline_token()
     except Exception as e:
@@ -85,11 +87,12 @@ app = FastAPI(title="BeeLine-UTM5 Integration Module", version="1.0.0", lifespan
 
 @app.get("/subscriber/{phone_number}", summary="Получить информацию об абоненте")
 async def get_subscriber(
-    phone_number: str, 
+    phone_number: str,
     api_key: str = Depends(verify_api_key),
     beeline_soap: BeelineSoapClient = Depends(get_beeline_soap_client)
 ):
-    info = beeline_soap.get_ctn_info_list(ban=None, ctn=phone_number)
+    # ban = beeline_soap.get_ban_info_list()
+    info = beeline_soap.get_ctn_info_list(ban=phone_number)
     if not info:
         raise HTTPException(status_code=404, detail="Failed to get subscriber info from Beeline")
     return {"status": "success", "data": info}

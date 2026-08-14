@@ -1,6 +1,5 @@
 fastapi
 uvicorn
 requests
-zeep
 python-dotenv
 xmltodict
