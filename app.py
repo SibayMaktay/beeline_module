@@ -7,7 +7,7 @@ import config.config as config
 
 from client.beeline_soap_client import BeelineSoapClient
 from client.beeline_rest_client import BeelineRestClient
-from client.utm5_client import UTM5Client
+from client.utm5_rest_client import UTM5RestClient
 from token_api.token_beeline import get_beeline_token, invalidate_token
 from token_api.token_utm5 import get_utm5_token
 
@@ -46,10 +46,10 @@ def verify_api_key(x_api_key: str = Header(..., alias="X-API-Key")):
         raise HTTPException(status_code=403, detail="Invalid API key")
     return x_api_key
 
-def get_utm5_client():
-    return UTM5Client(
+def get_utm5_rest_client():
+    return UTM5RestClient(
         base_url=config.utm5_api_url,
-        session_id_provider=get_utm5_token
+        api_key=config.api_key
     )
 
 def get_beeline_rest_client():
@@ -102,13 +102,13 @@ async def sync_payments(
     request: PaymentSyncRequest,
     api_key: str = Depends(verify_api_key),
     beeline_soap: BeelineSoapClient = Depends(get_beeline_soap_client),
-    utm5_client: UTM5Client = Depends(get_utm5_client)
+    utm5_rest_client: UTM5RestClient = Depends(get_utm5_rest_client)
 ):
     payments = beeline_soap.get_payment_list(ban=request.account_id, start_date=request.start_date, end_date=request.end_date)
     if not payments:
         raise HTTPException(status_code=400, detail="Failed to get payments from BeeLine")
 
-    utm5_user = utm5_client.get_user_by_phone(request.phone_number)
+    utm5_user = utm5_rest_client.search_user_by_phone(request.phone_number)
     if not utm5_user:
         raise HTTPException(status_code=404, detail="User not found in UTM5")
     user_id = None
@@ -132,7 +132,7 @@ async def sync_payments(
         except (ValueError, TypeError):
             logger.warning(f"Некорректное значение суммы платежа: {amount}")
 
-    result = utm5_client.update_user_balance(user_id, total_amount)
+    result = utm5_rest_client.pay_user(user_id, total_amount)
     if not result:
         raise HTTPException(status_code=500, detail="Failed to update balance in UTM5")
 
@@ -149,7 +149,7 @@ async def change_tariff_endpoint(
     request: TariffChangeRequest,
     api_key: str = Depends(verify_api_key),
     beeline_soap: BeelineSoapClient = Depends(get_beeline_soap_client),
-    utm5_client: UTM5Client = Depends(get_utm5_client)
+    utm5_rest_client: UTM5RestClient = Depends(get_utm5_rest_client)
 ):
     beeline_result = beeline_soap.change_pp(request.phone_number, request.new_tariff_code)
     if not beeline_result:
@@ -160,7 +160,7 @@ async def change_tariff_endpoint(
         logger.error(f"Tarrif mapping not found: {request.new_tariff_code}")
         raise HTTPException(status_code=400, detail=f"Tarrif mapping not found for code: {request.new_tariff_code}")
 
-    utm5_result = utm5_client.change_user_tariff(request.utm5_user_id, utm5_tariff_id)
+    utm5_result = utm5_rest_client.change_tariff(request.utm5_user_id, utm5_tariff_id)
     if not utm5_result:
         raise HTTPException(status_code=500, detail="Failed to change tariff in UTM5")
     return {
@@ -249,7 +249,7 @@ async def replace_sim_1(
 
 @app.get("/health", summary="Проверка работоспособности модуля")
 async def health_check(
-    utm5_client: UTM5Client = Depends(get_utm5_client)
+    utm5_client: UTM5RestClient = Depends(get_utm5_rest_client)
 ):
     is_utm5_ready = utm5_client is not None and hasattr(utm5_client, "session_id") and utm5_client.session_id is not None
     return {
