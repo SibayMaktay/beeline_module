@@ -28,7 +28,7 @@ class UTM5Client:
         )
         response.raise_for_status()
         users = response.json()
-        return user.get("items", []) or users
+        return users.get("items", []) or users
 
     def pay_user(self, user_id: int, amount: float, comment="integration sync"):
         response = self.session.post(

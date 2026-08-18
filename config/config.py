@@ -15,10 +15,11 @@ utm5_port = os.getenv('UTM5_PORT', "9080")
 utm5_api_url = f"{os.getenv('UTM5_API_URL', 'http://localhost')}" # {utm5_port}
 utm5_login = os.getenv('UTM5_LOGIN')
 utm5_password = os.getenv('UTM5_PASSWORD')
+utm5_api_key = os.getenv('UTM5_API_KEY')
 
 module_host = "127.0.0.1"
 module_port = "9090"
-api_key = os.getenv('API_KEY')
+module_api_key = os.getenv('MODULE_API_KEY')
 
 log_level = "INFO" # default = INFO
 log_file = "/var/log/beeline_module/module.log" # default = /var/log/beeline_module/module.log
