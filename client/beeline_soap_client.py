@@ -166,6 +166,7 @@ class BeelineSoapClient:
             xml,
             "urn:uss-wsapi:Subscriber:SubscriberInterface:changePPRequest"
         )
+
     def get_unbilled_balance(
         self,
         ctn: str
@@ -325,6 +326,28 @@ class BeelineSoapClient:
         return _make_soap_request(
             xml,
             "urn:uss-wsapi:Subscriber:SubscriberInterface:getBillCallsRequest"
+        )
+
+    def get_bill_calls_paged(
+        self,
+        request_id: str,
+        page: int = None,
+        records_per_page: str = None
+    ) -> Optional[Any]:
+        """
+        Получить звонки с пагинацией.
+        """
+        session_id = self.token_provider()
+        xml = get_bill_calls_paged_template(
+            session_id=session_id,
+            request_id=request_id,
+            page=page,
+            login=config.beeline_login,
+            records_per_page=records_per_page
+        )
+        return _make_soap_request(
+            xml,
+            "urn:uss-wsapi:Subscriber:SubscriberInterface:getBillCallsPagedRequest"
         )
 
     def get_adjustment_list(
@@ -710,28 +733,6 @@ class BeelineSoapClient:
         return _make_soap_request(
             xml,
             "urn:uss-wsapi:Subscriber:SubscriberInterface:getBANInfoListPagedRequest"
-        )
-
-    def get_bill_calls_paged(
-        self,
-        request_id: str,
-        page: int = None,
-        records_per_page: str = None
-    ) -> Optional[Any]:
-        """
-        Получить звонки с пагинацией.
-        """
-        session_id = self.token_provider()
-        xml = get_bill_calls_paged_template(
-            session_id=session_id,
-            request_id=request_id,
-            page=page,
-            login=config.beeline_login,
-            records_per_page=records_per_page
-        )
-        return _make_soap_request(
-            xml,
-            "urn:uss-wsapi:Subscriber:SubscriberInterface:getBillCallsPagedRequest"
         )
 
     def get_data(
