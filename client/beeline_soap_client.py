@@ -544,7 +544,7 @@ class BeelineSoapClient:
 
     def personal_data_update(
         self,
-        data: str
+        data: dict
     ) -> Optional[Any]:
         """
         Обновление персональных данных.
@@ -618,12 +618,12 @@ class BeelineSoapClient:
 
     def add_shared_number_dol(
         self,
-        request_id: str,
+        ctn_form: str,
         ctn_to: str,
-        ctn_type: str,
-        soc: str,
-        prepaid_state_chk_cancel: str,
-        check_add_number_registration: str
+        ctn_type: str = None,
+        soc: str = None,
+        prepaid_state_chk_cancel: str = None,
+        check_add_number_registration: str = None
     ) -> Optional[Any]:
         """
         Добавление одного номера в shared DOL.
@@ -631,7 +631,7 @@ class BeelineSoapClient:
         session_id = self.token_provider()
         xml = add_shared_number_dol_template(
             session_id=session_id,
-            request_id=request_id,
+            ctn_form=ctn_form,
             ctn_to=ctn_to,
             ctn_type=ctn_type,
             soc=soc,

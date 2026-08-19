@@ -484,16 +484,19 @@ def delete_shared_number_list_dol_template(
 
 def personal_data_update_template(
     session_id: str,
-    data: str,  # предполагается, что это уже готовый XML/строка с элементами Data
+    data: dict,
     login: str = None
 ):
     """
     Обновление персональных данных абонента.
     """
+    data_xml = "".join(
+        f"<{key}>{val}</{key}>" for key, val in data.items() if val is not None
+    )
     return universal_soap_template(
         session_id,
         "personalDataUpdate",
-        {data},
+        data_xml,
         login=login
     )
 
@@ -546,7 +549,6 @@ def get_ban_info_list_template(
 
 def add_shared_number_dol_template(
     session_id: str,
-    request_id: str,
     ctn_to: str,
     ctn_type: str,
     soc: str,
@@ -559,7 +561,6 @@ def add_shared_number_dol_template(
     return universal_soap_template(
         session_id,
         "addSharedNumberDOL",
-        requestId=request_id,
         ctnTo=ctn_to,
         ctnType=ctn_type,
         soc=soc,

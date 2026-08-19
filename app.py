@@ -611,15 +611,17 @@ async def get_bill_charges_paged_app(
 
 class SharedNumber(BaseModel):
     ctn_from: str
-    ctn_to_list: str
     ctn_to: str
+
+class SharedNumberDOL(SharedNumber):
+    ctn_type: str = None
     soc: str = None
     prepaid_state_chk_cancel: str = None
     check_add_number_registration: str = None
 
 @app.post("/sharednumber/dol/add", summary="Добавить номер в DOL shared list (addSharedNumberDOL)", tags=["SOAP Beeline"])
 async def add_shared_number_dol_app(
-    request: SharedNumber,
+    request: SharedNumberDOL,
     api_key: str = Depends(verify_api_key),
     beeline_soap: BeelineSoapClient = Depends(get_beeline_soap_client)
 ):
@@ -635,9 +637,15 @@ async def add_shared_number_dol_app(
         raise HTTPException(status_code=404, detail="Failed to add shared number to DOL")
     return {"status": "success", "data": data}
 
+class SharedNumberListDOL(SharedNumber):
+    ctn_to_list: str = None
+    soc: str = None
+    prepaid_state_chk_cancel: str = None
+    check_add_number_registration: str = None
+
 @app.post("/sharednumber/add", summary="Добавить номер в shared list (addSharedNumberListDOL)", tags=["SOAP Beeline"])
 async def add_shared_number_list_app(
-    request: SharedNumber,
+    request: SharedNumberListDOL,
     api_key: str = Depends(verify_api_key),
     beeline_soap: BeelineSoapClient = Depends(get_beeline_soap_client)
 ):
@@ -653,9 +661,12 @@ async def add_shared_number_list_app(
         raise HTTPException(status_code=404, detail="Failed to add shared number to DOL")
     return {"status": "success", "data": data}
 
+class SharedNumberDeleteDOL(SharedNumber):
+    ctn_to_list: str = None
+
 @app.post("/sharednumber/delete", summary="Удалить номер из shared list (deleteSharedNumberListDOL)", tags=["SOAP Beeline"])
 async def delete_shared_number_list_app(
-    request: SharedNumber,
+    request: SharedNumberDeleteDOL,
     api_key: str = Depends(verify_api_key),
     beeline_soap: BeelineSoapClient = Depends(get_beeline_soap_client)
 ):
@@ -669,11 +680,67 @@ async def delete_shared_number_list_app(
     return {"status": "success", "data": data}
 
 class PersonalDataUpdate(BaseModel):
-    ctn: str
-    first_name: str = None
-    last_name: str = None
-    birth_date: str = None
-    # ... любые другие требуемые поля
+    ban: str = None
+    statusBan: str = None
+    ctn: str = None
+    marketCode: str = None
+    docName: str = None
+    changeDate: str = None
+    startServiceDate: str = None
+    confDate: str = None
+    statusPdn: str = None
+    blockDate: str = None
+    accessClientPdn: str = None
+    introPdn: str = None
+    citizenship: str = None
+    docNo: str = None
+    docType: str = None
+    docIssueDate: str = None
+    docIssuer: str = None
+    docIssuerCode: str = None
+    docExpirationDate: str = None
+    birthdate: str = None
+    frnMigcard: str = None
+    frnMigcardEffDate: str = None
+    frnMigcardExpDate: str = None
+    frnDoc: str = None
+    firstName: str = None
+    lastName: str = None
+    surName: str = None
+    birthplace: str = None
+    gender: str = None
+    taxNumber: str = None
+    snils: str = None
+    legalPostcode: str = None
+    legalCountryCode: str = None
+    legalRegion: str = None
+    legalArea: str = None
+    legalPlaceType: str = None
+    legalPlace: str = None
+    legalStreetType: str = None
+    legalStreetName: str = None
+    legalHouseNo: str = None
+    legalBuildingType: str = None
+    legalBuildingNo: str = None
+    legalApartmentType: str = None
+    legalApartmentNo: str = None
+    legalAddrComment: str = None
+    legalFiasId: str = None
+    actualPostcode: str = None
+    actualCountryCode: str = None
+    actualRegion: str = None
+    actualArea: str = None
+    actualPlaceType: str = None
+    actualPlace: str = None
+    actualStreetType: str = None
+    actualStreetName: str = None
+    actualHouseNo: str = None
+    actualBuildingType: str = None
+    actualBuildingNo: str = None
+    actualApartmentType: str = None
+    actualApartmentNo: str = None
+    actualAddrComment: str = None
+    actualFiasId: str = None
 
 @app.post("/personaldata/update", summary="Обновление персональных данных (personalDataUpdate)", tags=["SOAP Beeline"])
 async def personal_data_update_app(
@@ -681,8 +748,9 @@ async def personal_data_update_app(
     api_key: str = Depends(verify_api_key),
     beeline_soap: BeelineSoapClient = Depends(get_beeline_soap_client)
 ):
+    data_dict = {k: v for k, v in request.dict().items() if v is not None}
     data = beeline_soap.personal_data_update(
-        **request.dict()
+        data=data_dict
     )
     if not data:
         raise HTTPException(status_code=404, detail="Failed to update personal data")
@@ -705,10 +773,9 @@ async def personal_data_result_app(
     return {"status": "success", "data": data}
 
 class GetDataReportRequest(BaseModel):
-    ban: str
-    report_type: str
-    start_date: str = None
-    end_date: str = None
+    request_id: str
+    page: int = None
+    records_per_page: str = None
 
 @app.post("/data/report", summary="Получить отчёт данных (getDataReport)", tags=["SOAP Beeline"])
 async def get_data_report_app(
@@ -717,32 +784,25 @@ async def get_data_report_app(
     beeline_soap: BeelineSoapClient = Depends(get_beeline_soap_client)
 ):
     data = beeline_soap.get_data_report(
-        ban=request.ban,
-        report_type=request.report_type,
-        start_date=request.start_date,
-        end_date=request.end_date
+        request_id=request.request_id,
+        page=request.page,
+        records_per_page=request.records_per_page
     )
     if not data:
         raise HTTPException(status_code=404, detail="Failed to get data report from Beeline")
     return {"status": "success", "data": data}
 
-class GetBANInfoListRequest(BaseModel):
-    ban: str
-
 @app.post("/ban/list", summary="Список лицевых счетов (getBANInfoList)", tags=["SOAP Beeline"])
 async def get_ban_info_list_app(
-    request: GetBANInfoListRequest,
     api_key: str = Depends(verify_api_key),
     beeline_soap: BeelineSoapClient = Depends(get_beeline_soap_client)
 ):
-    data = beeline_soap.get_ban_info_list(
-        ban=request.ban
-    )
+    data = beeline_soap.get_ban_info_list()
     if not data:
         raise HTTPException(status_code=404, detail="Failed to get BAN info list from Beeline")
     return {"status": "success", "data": data}
 
-class GetBANInfoListPagedRequest(GetBANInfoListRequest):
+class GetBANInfoListPagedRequest(BaseModel):
     page: int = None
     records_per_page: int = None
 
@@ -753,7 +813,6 @@ async def get_ban_info_list_paged_app(
     beeline_soap: BeelineSoapClient = Depends(get_beeline_soap_client)
 ):
     data = beeline_soap.get_ban_info_list_paged(
-        ban=request.ban,
         page=request.page,
         records_per_page=request.records_per_page
     )
@@ -761,69 +820,62 @@ async def get_ban_info_list_paged_app(
         raise HTTPException(status_code=404, detail="Failed to get BAN info paged from Beeline")
     return {"status": "success", "data": data}
 
-class CreateBillCallsRequest(BaseModel):
+class CreateBillRequest(BaseModel):
     ban: str
-    ctn: str
-    start_date: str
-    end_date: str
+    bill_date: str
+    ctn_list: str = None
 
 @app.post("/bill/calls/request", summary="Создать запрос детализации звонков (createBillCallsRequest)", tags=["SOAP Beeline"])
 async def create_bill_calls_request_app(
-    request: CreateBillCallsRequest,
+    request: CreateBillRequest,
     api_key: str = Depends(verify_api_key),
     beeline_soap: BeelineSoapClient = Depends(get_beeline_soap_client)
 ):
     data = beeline_soap.create_bill_calls_request(
         ban=request.ban,
-        ctn=request.ctn,
-        start_date=request.start_date,
-        end_date=request.end_date
+        bill_date=request.bill_date,
+        ctn_list=request.ctn_list
     )
     if not data:
         raise HTTPException(status_code=404, detail="Failed to create bill calls request")
     return {"status": "success", "data": data}
 
-class CreateBillChargesRequest(BaseModel):
-    ban: str
-    ctn: str
-    start_date: str
-    end_date: str
-
 @app.post("/bill/charges/request", summary="Создать запрос детализации начислений (createBillChargesRequest)", tags=["SOAP Beeline"])
 async def create_bill_charges_request_app(
-    request: CreateBillChargesRequest,
+    request: CreateBillRequest,
     api_key: str = Depends(verify_api_key),
     beeline_soap: BeelineSoapClient = Depends(get_beeline_soap_client)
 ):
     data = beeline_soap.create_bill_charges_request(
         ban=request.ban,
-        ctn=request.ctn,
-        start_date=request.start_date,
-        end_date=request.end_date
+        bill_date=request.bill_date,
+        ctn_list=request.ctn_list
     )
     if not data:
         raise HTTPException(status_code=404, detail="Failed to create bill charges request")
     return {"status": "success", "data": data}
 
 class CreateDetailsRequest(BaseModel):
-    ban: str
-    ctn: str
-    detail_type: str
-    period_from: str
-    period_to: str
+    period_start: str
+    period_end: str
+    format_: str
+    channel: str
+    email: str
 
-@app.post("/details/request", summary="Создать запрос на детализацию (createDetailsRequest)", tags=["SOAP Beeline"])
+@app.post("/details/request/{ctn}", summary="Создать запрос на детализацию (createDetailsRequest)", tags=["SOAP Beeline"])
 async def create_details_request_app(
     request: CreateDetailsRequest,
+    ctn: str,
     api_key: str = Depends(verify_api_key),
     beeline_soap: BeelineSoapClient = Depends(get_beeline_soap_client)
 ):
     data = beeline_soap.create_details_request(
-        ban=request.ban,
-        ctn=request.ctn,
-        detail_type=request.detail_type,
-        period_from=request.period_from,
-        period_to=request.period_to,
+        ctn=ctn,
+        period_start=request.period_start,
+        period_end=request.period_end,
+        format_=request.format_,
+        channel=request.channel,
+        email=request.email,
     )
     if not data:
         raise HTTPException(status_code=404, detail="Failed to create details request")
@@ -831,8 +883,8 @@ async def create_details_request_app(
 
 class GetDataRequest(BaseModel):
     ban: str
-    data_type: str
-    date: str = None
+    hierarchy_id: str
+    subscriber_no: str
 
 @app.post("/data", summary="Получить данные (getData)", tags=["SOAP Beeline"])
 async def get_data_app(
@@ -842,8 +894,8 @@ async def get_data_app(
 ):
     data = beeline_soap.get_data(
         ban=request.ban,
-        data_type=request.data_type,
-        date=request.date
+        hierarchy_id=request.hierarchy_id,
+        subscriber_no=request.subscriber_no
     )
     if not data:
         raise HTTPException(status_code=404, detail="Failed to get data")
