@@ -7,9 +7,9 @@ import config.config as config
 
 from client.beeline_soap_client import BeelineSoapClient
 from client.beeline_rest_client import BeelineRestClient
-from client.utm5_rest_client import UTM5RestClient
 from token_api.token_beeline import get_beeline_token, invalidate_token
-from token_api.token_utm5 import get_utm5_token
+from routers.utm5_router import router as utm5_router
+from dependencies_utm5 import shutdown_utm5
 
 logging.basicConfig(
     level=logging.INFO,
@@ -34,9 +34,9 @@ class TariffChangeRequest(BaseModel):
     free_change: str = None
 
 TARIFF_MAPPING = {
-    "BEELINE_TARIFF_1": "EXCLH11",
-    "BEELINE_TARIFF_2": "EXCLH12",
-    "BEELINE_TARIFF_3": "EXCLH13",
+    "EXCLH11": "1",
+    "EXCLH12": "2",
+    "EXCLH13": "3",
 }
 
 # --- Зависимости и DI-фабрики ---
@@ -44,12 +44,6 @@ def verify_api_key(x_api_key: str = Header(..., alias="X-API-Key")):
     if x_api_key != config.api_key:
         raise HTTPException(status_code=403, detail="Invalid API key")
     return x_api_key
-
-def get_utm5_rest_client():
-    return UTM5RestClient(
-        base_url=config.utm5_api_url,
-        api_key=config.utm5_api_key
-    )
 
 def get_beeline_rest_client():
     token = get_beeline_token()
@@ -70,28 +64,16 @@ def get_beeline_soap_client():
 async def lifespan(app: FastAPI):
     logger.info("Старт интеграции...")
     try:
-        get_utm5_token()
-    except Exception as e:
-        logger.warning(f"UTM5 аутентификация не удалась на старте: {e}")
-    try:
         get_beeline_token()
     except Exception as e:
         logger.warning(f"Beeline аутентификация не удалась на старте: {e}")
     yield
+    shutdown_utm5()
     logger.info("Завершение работы интеграционной службы...")
 
 app = FastAPI(title="BeeLine-UTM5 Integration Module", version="1.0.0", lifespan=lifespan)
 
-@app.get("/health", summary="Проверка работоспособности модуля")
-async def health_check(
-    utm5_client: UTM5RestClient = Depends(get_utm5_rest_client)
-):
-    is_utm5_ready = utm5_client is not None and hasattr(utm5_client, "session_id") and utm5_client.session_id is not None
-    return {
-        "status": "healthy",
-        "service": "beeline-utm5-integration",
-        "utm5_authenticated": is_utm5_ready,
-    }
+app.include_router(utm5_router)
 
 # --- REST Beeline (USSS) ---
 @app.get("/rests/{ctn}", summary="Остатки пакетов абонента (REST)", tags=["REST Beeline"])
@@ -900,98 +882,6 @@ async def get_data_app(
     if not data:
         raise HTTPException(status_code=404, detail="Failed to get data")
     return {"status": "success", "data": data}
-
-# --- API HANDLERS ---
-@app.post("/sync/payments", summary="Синхронизация платежей")
-async def sync_payments(
-    request: PaymentSyncRequest,
-    api_key: str = Depends(verify_api_key),
-    beeline_soap: BeelineSoapClient = Depends(get_beeline_soap_client),
-    utm5_rest_client: UTM5RestClient = Depends(get_utm5_rest_client)
-):
-    payments = beeline_soap.get_payment_list_paged(
-        ctn=request.ctn,
-        ban=request.ban,
-        start_date=request.start_date,
-        end_date=request.end_date,
-        page=request.page,
-        records_per_page=request.records_per_page
-    )
-    if not payments:
-        raise HTTPException(status_code=400, detail="Failed to get payments from BeeLine")
-
-    utm5_user = utm5_rest_client.search_user_by_query(
-        request.ctn
-    )
-    if not utm5_user:
-        raise HTTPException(status_code=404, detail="User not found in UTM5")
-    user_id = None
-    if isinstance(utm5_user, list) and len(utm5_user) > 0:
-        user_id = utm5_user[0].get('id') or utm5_user[0].get('user_id')
-    elif isinstance(utm5_user, dict):
-        user_id = utm5_user.get('id') or utm5_user.get('user_id')
-    if not user_id:
-        logger.error(f"Не удалось извлечь user_id из ответа UTM5: {utm5_user}")
-        raise HTTPException(status_code=500, detail="Invalid UTM5 user data structure")
-
-    # payments всегда список
-    payments_list = payments if isinstance(payments, list) else [payments]
-    total_amount = 0.0
-    payment_count = 0
-    for p in payments_list:
-        amount = p.get('amount') if isinstance(p, dict) else getattr(p, 'amount', 0)
-        try:
-            total_amount += float(amount or 0)
-            payment_count += 1
-        except (ValueError, TypeError):
-            logger.warning(f"Некорректное значение суммы платежа: {amount}")
-
-    result = utm5_rest_client.pay_user(user_id, total_amount)
-    if not result:
-        raise HTTPException(status_code=500, detail="Failed to update balance in UTM5")
-
-    return {
-        "status": "success",
-        "payments_synced": payment_count,
-        "total_amount": total_amount,
-        "utm5_user_id": user_id,
-        "utm5_update": result
-    }
-
-@app.post("/tariff/change", summary="Смена тарифа: Beeline -> UTM5")
-async def change_tariff_endpoint(
-    request: TariffChangeRequest,
-    api_key: str = Depends(verify_api_key),
-    beeline_soap: BeelineSoapClient = Depends(get_beeline_soap_client),
-    utm5_rest_client: UTM5RestClient = Depends(get_utm5_rest_client)
-):
-    beeline_result = beeline_soap.change_pp(
-        ctn=request.ctn,
-        price_plan=request.price_plan,
-        future_date=request.future_date,
-        free_change=request.free_change
-    )
-    if not beeline_result:
-        raise HTTPException(status_code=400, detail="Failed to change tariff in BeeLine")
-
-    utm5_tariff_id = TARIFF_MAPPING.get(
-        request.price_plan
-    )
-    if not utm5_tariff_id:
-        logger.error(f"Tarrif mapping not found: {request.price_plan}")
-        raise HTTPException(status_code=400, detail=f"Tarrif mapping not found for code: {request.price_plan}")
-
-    utm5_result = utm5_rest_client.set_user_tariff(request.utm5_user_id, utm5_tariff_id)
-    if not utm5_result:
-        raise HTTPException(status_code=500, detail="Failed to change tariff in UTM5")
-    return {
-        "status": "success",
-        "ctn": request.ctn,
-        "beeline_tariff_code": request.price_plan,
-        "utm5_tariff_id": utm5_tariff_id,
-        "beeline_result": beeline_result,
-        "utm5_result": utm5_result
-    }
 
 tags_metadata = [
     {
