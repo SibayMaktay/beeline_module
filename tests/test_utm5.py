@@ -1,22 +1,25 @@
 """
+Тесты моста Beeline <-> UTM5.
+
 Запуск:  pytest tests/test_utm5.py -v
+
+Мост не содержит своей бизнес-логики (mapper/ledger/*_sync больше нет),
+поэтому тесты бьют напрямую в utm5/*.py (SDK) и в утилиту
+routers.utm5_router._resolve_account, которая свод к минимуму решает,
+какой account_id использовать.
 """
 
 from __future__ import annotations
 
 import os
 import sys
-import tempfile
-
 import pytest
-import requests
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from services import BeelineUTM5Mapper, BlockSyncService, PaymentLedger, PaymentSyncService, TariffSyncService  # noqa: E402
-from utm5 import UTM5Client, UTM5NotFound, UTM5Settings  # noqa: E402
+from routers.utm5_router import _resolve_account  # noqa: E402
+from utm5 import UTM5Client, UTM5NotFound, UTM5Settings, UTM5BadRequest  # noqa: E402
 from utm5.transport import UTM5Transport  # noqa: E402
-
 
 # ---------------------------------------------------------------------- #
 # фейковый UTM5
@@ -32,10 +35,10 @@ class FakeResponse:
     def json(self):
         return self._payload
 
-
 class FakeUTM5Session:
-    """Минимальная имитация REST API UTM5 на requests.Session."""
-
+    """
+    Минимальная имитация REST API UTM5 на requests.Session.
+    """
     def __init__(self):
         self.calls = []
         self.payments = []
@@ -49,23 +52,35 @@ class FakeUTM5Session:
         }
         self.fail_next_payment = False
 
-    def request(self, method, url, params=None, json=None, cookies=None, timeout=None, verify=None):
+    def request(
+        self,
+        method,
+        url,
+        params=None,
+        json=None,
+        cookies=None,
+        timeout=None,
+        verify=None
+    ):
         path = url.split("/api/", 1)[-1]
         self.calls.append((method, path, params, json))
 
         if path == "users/search":
             value = (json or {}).get("value", "")
-            if value in ("9161234567", "79161234567", "+79161234567"):
-                return FakeResponse(200, [{
+            if value in ("9608029838", "79608029838", "+79608029838"):
+                return FakeResponse(200, {
                     "user_id": "42", "login": "ivanov", "full_name": "Иванов И.И.",
                     "basic_account": "100", "accounts": ["100"], "email": "",
-                }])
+                })
             return FakeResponse(200, [])
 
         if path == "users/accounts":
             if method == "PUT":
                 self.account["block_type"] = (json or {}).get("block_type", 0)
                 return FakeResponse(200, {"result": "ok"})
+            account_id = (params or {}).get("account_id")
+            if account_id and str(account_id) != str(self.account["account_id"]):
+                return FakeResponse(404, {"error": "not found"})
             return FakeResponse(200, [dict(self.account)])
 
         if path == "users/tarifflinks":
@@ -101,10 +116,19 @@ class FakeUTM5Session:
 @pytest.fixture
 def settings():
     return UTM5Settings(
-        base_url="http://utm.test", api_prefix="/api", permanent_token="TESTTOKEN",
-        login="", password="", timeout=5.0, max_retries=3, retry_backoff=0.0,
-        verify_ssl=False, payment_method_id=1, currency_id=1,
-        payment_comment_prefix="Beeline", turn_on_inet=1,
+        base_url="http://utm.test",
+        api_prefix="/api",
+        permanent_token="TESTTOKEN",
+        login="",
+        password="",
+        timeout=5.0,
+        max_retries=3,
+        retry_backoff=0.0,
+        verify_ssl=False,
+        payment_method_id=1,
+        currency_id=1,
+        payment_comment_prefix="Beeline",
+        turn_on_inet=1,
     )
 
 
@@ -118,73 +142,81 @@ def client(settings, fake_session):
     transport = UTM5Transport(settings, session=fake_session)
     return UTM5Client(settings, session=fake_session, transport=transport)
 
-
-@pytest.fixture
-def mapper(client):
-    return BeelineUTM5Mapper(client, tariff_map={"EXCLH12": 2, "EXCLH_BY_NAME": "Безлимитный 100"})
-
-
-@pytest.fixture
-def ledger():
-    path = os.path.join(tempfile.mkdtemp(), "ledger.db")
-    return PaymentLedger(path)
-
-
 # ---------------------------------------------------------------------- #
-# поиск абонента
+# поиск абонента (utm5/users.py)
 # ---------------------------------------------------------------------- #
 def test_find_user_by_phone_tries_formats(client):
-    user = client.users.find_by_phone("+7 (916) 123-45-67")
+    user = client.users.find_by_phone("+7 (960) 802-98-38")
     assert user is not None
     assert user.user_id == 42
     assert user.preferred_account_id == 100
 
-
 def test_unknown_phone_returns_none(client):
     assert client.users.find_by_phone("9990000000") is None
 
+# ---------------------------------------------------------------------- #
+# мост: определение account_id — единственная "логика" роутера
+# ---------------------------------------------------------------------- #
+def test_resolve_account_by_ctn(client):
+    user_id, account_id = _resolve_account(client, ctn="9608029838", account_id=None, user_id=None)
+    assert user_id == 42
+    assert account_id == 100
 
-def test_bind_subscriber_raises_when_absent(mapper):
+
+def test_resolve_account_by_ctn_not_found_raises_404_class(client):
     with pytest.raises(UTM5NotFound):
-        mapper.bind_subscriber("9990000000")
+        _resolve_account(client, ctn="9990000000", account_id=None, user_id=None)
 
+
+def test_resolve_account_by_account_id_direct(client):
+    """
+    Второй вариант идентификации: account_id передан явно, поиск по ctn не выполняется.
+    """
+    user_id, account_id = _resolve_account(client, ctn=None, account_id=100, user_id=None)
+    assert account_id == 100
+    assert user_id == 42  # доёргано из карточки счёта
+
+
+def test_resolve_account_by_account_id_with_user_id_skips_lookup(client, fake_session):
+    """Если передали и account_id, и user_id — GET users/accounts не должен вызываться."""
+    user_id, account_id = _resolve_account(client, ctn=None, account_id=100, user_id=42)
+    assert (user_id, account_id) == (42, 100)
+    assert not any(c[1] == "users/accounts" and c[0] == "GET" for c in fake_session.calls)
+
+
+def test_resolve_account_unknown_account_id_raises_404(client):
+    with pytest.raises(UTM5NotFound):
+        _resolve_account(client, ctn=None, account_id=999, user_id=None)
+
+
+def test_resolve_account_without_any_identifier_raises_bad_request(client):
+    with pytest.raises(UTM5BadRequest):
+        _resolve_account(client, ctn=None, account_id=None, user_id=None)
 
 # ---------------------------------------------------------------------- #
-# платежи
+# платежи — мост не проверяет дубли, просто передаёт вызов дальше
 # ---------------------------------------------------------------------- #
-def test_payments_applied_once(client, mapper, ledger, fake_session):
-    service = PaymentSyncService(client, mapper, ledger)
-    raw = [
-        {"paymentId": "P-1", "amount": "100,50", "date": "2026-08-01 12:00:00"},
-        {"paymentId": "P-2", "amount": 250, "date": "2026-08-02 12:00:00"},
-    ]
+def test_payment_create_hits_utm5_and_returns_transaction_id(client, fake_session):
+    from utm5 import PaymentRequest
 
-    first = service.sync("9161234567", raw)
-    assert len(first.applied) == 2
-    assert first.total_applied == 350.5
-    assert len(fake_session.payments) == 2
-
-    # повторная синхронизация тех же данных не должна зачислить деньги снова
-    second = service.sync("9161234567", raw)
-    assert len(second.applied) == 0
-    assert len(second.duplicates) == 2
-    assert len(fake_session.payments) == 2
-
-
-def test_failed_payment_is_retryable(client, mapper, ledger, fake_session):
-    service = PaymentSyncService(client, mapper, ledger)
-    raw = [{"paymentId": "P-9", "amount": 90, "date": "2026-08-03"}]
-
-    fake_session.fail_next_payment = True
-    report = service.sync("9161234567", raw)
-    assert len(report.failed) == 1
-    assert len(fake_session.payments) == 0
-
-    # бронь снята -> вторая попытка проходит
-    retry = service.sync("9161234567", raw)
-    assert len(retry.applied) == 1
+    payment = client.payments.create(
+        PaymentRequest(account_id=100, user_id=42, amount=500, comment="test")
+    )
+    assert payment.transaction_id == 1001
     assert len(fake_session.payments) == 1
 
+    payment2 = client.payments.create(
+        PaymentRequest(account_id=100, user_id=42, amount=500, comment="test")
+    )
+    assert payment2.transaction_id == 1002
+    assert len(fake_session.payments) == 2
+
+def test_payment_zero_amount_is_rejected_before_http_call(client, fake_session):
+    from utm5 import PaymentRequest, UTM5BadRequest as PaymentBadRequest
+
+    with pytest.raises(PaymentBadRequest):
+        client.payments.create(PaymentRequest(account_id=100, user_id=42, amount=0, comment="x"))
+    assert len(fake_session.payments) == 0
 
 def test_payment_post_is_not_retried_on_5xx(settings):
     """
@@ -205,82 +237,43 @@ def test_payment_post_is_not_retried_on_5xx(settings):
         transport.post("tariffing/payments", {"account_id": 1})
     assert session.attempts == 1, "POST платежа не должен повторяться"
 
+# ---------------------------------------------------------------------- #
+# тарифы (utm5/tariffs.py)
+# ---------------------------------------------------------------------- #
+def test_tariff_assign_by_id(client):
+    result = client.tariffs.assign(user_id=42, account_id=100, tariff_id=2, change_now=True)
+    assert result["tariff_link_id"] == 10
 
-def test_zero_and_broken_amounts_do_not_crash(client, mapper, ledger):
-    service = PaymentSyncService(client, mapper, ledger)
-    report = service.sync("9161234567", [
-        {"paymentId": "Z-1", "amount": 0},
-        {"paymentId": "Z-2", "amount": "не число"},
-    ])
-    assert len(report.applied) == 0
-    assert len(report.failed) == 2
+def test_tariff_require_by_name(client):
+    tariff = client.tariffs.require_by_name("Безлимитный 100")
+    assert tariff.tariff_id == 2
 
-
-def test_payment_body_matches_utm5_contract(client, mapper, ledger, fake_session):
-    PaymentSyncService(client, mapper, ledger).sync(
-        "9161234567", [{"paymentId": "C-1", "amount": 500, "date": "2026-08-01"}]
-    )
-    body = fake_session.payments[0]
-    for field in ("account_id", "user_id", "payment_incurrency", "currency_id",
-                  "actual_date", "method", "comment", "turn_on_inet"):
-        assert field in body
-    assert body["account_id"] == 100
-    assert body["payment_incurrency"] == 500.0
-
+def test_tariff_unknown_name_reises_not_found(client):
+    with pytest.raises(UTM5NotFound):
+        client.tariffs.require_by_name("Такого тарифа нет")
 
 # ---------------------------------------------------------------------- #
-# тарифы
+# блокировки (utm5/blocks.py)
 # ---------------------------------------------------------------------- #
-def test_tariff_change_and_idempotency(client, mapper):
-    service = TariffSyncService(client, mapper)
-
-    result = service.sync("9161234567", "EXCLH12")
-    assert result.changed is True
-    assert result.previous_tariff_id == 1
-    assert result.utm5_tariff_id == 2
-
-    again = service.sync("9161234567", "EXCLH12")
-    assert again.changed is False
-
-
-def test_tariff_resolved_by_name(client, mapper):
-    assert mapper.resolve_tariff_id("EXCLH_BY_NAME") == 2
-
-
-def test_unknown_price_plan_is_reported(client, mapper):
-    from utm5 import UTM5MappingError
-    with pytest.raises(UTM5MappingError):
-        mapper.resolve_tariff_id("NO_SUCH_PLAN")
-
-
-# ---------------------------------------------------------------------- #
-# блокировки
-# ---------------------------------------------------------------------- #
-def test_block_and_unblock(client, mapper, fake_session):
-    service = BlockSyncService(client, mapper)
-
-    blocked = service.sync("9161234567", blocked=True)
-    assert blocked.changed is True
+def test_block_and_unblock(client, fake_session):
+    account = client.users.get_account(100)
+    client.blocks.block(account, block_type=2)
     assert fake_session.account["block_type"] == 2
 
-    repeat = service.sync("9161234567", blocked=True)
-    assert repeat.changed is False
-
-    unblocked = service.sync("9161234567", blocked=False)
-    assert unblocked.changed is True
+    account = client.users.get_account(100)
+    client.blocks.unblock(account)
     assert fake_session.account["block_type"] == 0
 
-
-def test_block_update_preserves_contract_fields(client, mapper, fake_session):
-    BlockSyncService(client, mapper).sync("9161234567", blocked=True)
+def test_block_update_preserves_contract_fields(client, fake_session):
+    account = client.users.get_account(100)
+    client.blocks.block(account, block_type=2)
     put_calls = [c for c in fake_session.calls if c[0] == "PUT" and c[1] == "users/accounts"]
     body = put_calls[-1][3]
     assert body["contract_number"] == "Д-1"
     assert body["credit"] == 0.0
 
-
 # ---------------------------------------------------------------------- #
-# транспорт
+# транспорт (utm5/transport.py)
 # ---------------------------------------------------------------------- #
 def test_transport_sends_token_cookie(settings, fake_session):
     transport = UTM5Transport(settings, session=fake_session)
@@ -317,4 +310,4 @@ def test_transport_retries_on_5xx(settings):
 def test_transport_raises_not_found(settings, fake_session):
     transport = UTM5Transport(settings, session=fake_session)
     with pytest.raises(Exception):
-        transport.get("no/such/path")
+        transport.get("users", {"user_id": 999999})

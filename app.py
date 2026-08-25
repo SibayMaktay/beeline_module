@@ -17,28 +17,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# --- Модели данных ---
-class PaymentSyncRequest(BaseModel):
-    ctn: str
-    ban: str
-    start_date: str
-    end_date: str
-    page: int = None
-    records_per_page: str = None
-
-class TariffChangeRequest(BaseModel):
-    ctn: str
-    price_plan: str
-    utm5_user_id: int
-    future_date: str = None
-    free_change: str = None
-
-TARIFF_MAPPING = {
-    "EXCLH11": "1",
-    "EXCLH12": "2",
-    "EXCLH13": "3",
-}
-
 # --- Зависимости и DI-фабрики ---
 def verify_api_key(x_api_key: str = Header(..., alias="X-API-Key")):
     if x_api_key != config.api_key:
