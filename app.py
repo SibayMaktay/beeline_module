@@ -50,8 +50,26 @@ async def lifespan(app: FastAPI):
     logger.info("Завершение работы интеграционной службы...")
 
 app = FastAPI(title="BeeLine-UTM5 Integration Module", version="1.0.0", lifespan=lifespan)
-
 app.include_router(utm5_router)
+from fastapi import Request, HTTPException
+from fastapi.responses import JSONResponse
+
+BRIDGE_API_KEY = config.module_api_key
+
+@app.middleware("http")
+async def verify_api_key(request: Request, call_next):
+    """
+    Проверяет API ключ во всех запросах к мосту.
+    """
+    if request.url.path in ["/docs", "/redoc", "/openapi.json"]:
+        return await call_next(request)
+    api_key = request.headers.get("X-API-Key")
+    if not api_key or api_key != BRIDGE_API_KEY:
+        return JSONResponse(
+            status_code=403,
+            content={"detail": "Invalid or missing X-API-Key header"}
+        )
+    return await call_next(request)
 
 # --- REST Beeline (USSS) ---
 @app.get("/rests/{ctn}", summary="Остатки пакетов абонента (REST)", tags=["REST Beeline"])

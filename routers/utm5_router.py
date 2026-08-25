@@ -106,24 +106,24 @@ class SubscriberIdentity(BaseModel):
     Общая часть идентификации — либо ctn, либо account_id/user_id.
     """
     ctn: Optional[str] = Field(None, description="Номер телефона Beeline (если нет account_id)")
-    account_id: Optional[int] = Field(None, discriminator="Номер счёта UTM5 (приоритетнее ctn)")
+    account_id: Optional[int] = Field(None, description="Номер счёта UTM5 (приоритетнее ctn)")
     user_id: Optional[int] = Field(None, description="ID абонента UTM5 (опционально вместе с account_id)")
 
 class BlockBody(SubscriberIdentity):
-    block_type: int = Field(2, description="1 — админ, 2 — добровольная, 3 — с сохранением начислений")
-    start_ts: int = Field(0, description="Unix-время начала блокировки, 0 — сейчас")
-    end_ts: int = Field(0, description="Unix-время окончания, 0 — бессрочно")
+    block_type: int = Field(default=BLOCK_VOLUNTARY, description="1 — админ, 2 — добровольная, 3 — с сохранением начислений")
+    start_ts: int = Field(default=0, description="Unix-время начала блокировки, 0 — сейчас")
+    end_ts: int = Field(default=0, description="Unix-время окончания, 0 — бессрочно")
 
 class TariffChangeBody(SubscriberIdentity):
-    tariff_id: Optional[int] = Field(None, description="ID тарифа UTM5")
-    tariff_name: Optional[str] = Field(None, description="Имя тарифа UTM5 (если нет tariff_id)")
-    change_now: bool = Field(True, description="True — сменить сразу, False — со следующего периода")
+    tariff_id: Optional[int] = Field(default=None, description="ID тарифа UTM5")
+    tariff_name: Optional[str] = Field(default=None, description="Имя тарифа UTM5 (если нет tariff_id)")
+    change_now: bool = Field(default=True, description="True — сменить сразу, False — со следующего периода")
 
 class PaymentBody(SubscriberIdentity):
     amount: float = Field(..., gt=0, description="Сумма платежа, > 0")
-    comment: str = Field("", description="Комментарий к платежу")
-    external_number: str = Field("", description="Внешний номер платежа (для сверки в UTM5)")
-    actual_date: Optional[int] = Field(None, description="Unix-время платежа, по умолчанию — сейчас")
+    comment: str = Field(default="", description="Комментарий к платежу")
+    external_number: str = Field(default="", description="Внешний номер платежа (для сверки в UTM5)")
+    actual_date: Optional[int] = Field(default=None, descriptiуn="Unix-время платежа, по умолчанию — сейчас")
 
 # ---------------------------------------------------------------------- #
 # служебные эндпоинты
