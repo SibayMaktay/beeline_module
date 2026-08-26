@@ -1,6 +1,7 @@
 import logging
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, HTTPException, Depends, Header
+from fastapi import FastAPI, HTTPException, Depends, Header, Request
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from typing import Optional, Any, List
 import config.config as config
@@ -33,7 +34,6 @@ def get_beeline_rest_client():
     return client
 
 def get_beeline_soap_client():
-    # СВОЙ BeelineSoapClient реализуй! (или импортируй актуальный)
     return BeelineSoapClient(
         token_provider=get_beeline_token()
     )
@@ -51,8 +51,6 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="BeeLine-UTM5 Integration Module", version="1.0.0", lifespan=lifespan)
 app.include_router(utm5_router)
-from fastapi import Request, HTTPException
-from fastapi.responses import JSONResponse
 
 BRIDGE_API_KEY = config.module_api_key
 
@@ -61,7 +59,7 @@ async def verify_api_key(request: Request, call_next):
     """
     Проверяет API ключ во всех запросах к мосту.
     """
-    if request.url.path in ["/docs", "/redoc", "/openapi.json"]:
+    if request.url.path in ["/docs", "/redoc", "/openapi.json", "/utm5/health"]:
         return await call_next(request)
     api_key = request.headers.get("X-API-Key")
     if not api_key or api_key != BRIDGE_API_KEY:
