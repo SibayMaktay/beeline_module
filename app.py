@@ -69,7 +69,9 @@ async def verify_api_key(request: Request, call_next):
         )
     return await call_next(request)
 
-# --- REST Beeline (USSS) ---
+# ============================================================================
+# REST Beeline (USSS)
+# ============================================================================
 @app.get("/rests/{ctn}", summary="Остатки пакетов абонента (REST)", tags=["REST Beeline"])
 async def get_rests_app(
     ctn: str,
@@ -144,30 +146,34 @@ async def get_call_forward_by_request_app(
         raise HTTPException(status_code=502, detail="Beeline REST error /callForward info")
     return {"status": "success", "data": data}
 
-class CallForwardData(BaseModel):
-    cfType: Optional[str]
-    cfCtn: Optional[str]
-class PutCallForwardRequest(BaseModel):
+class PutCallForwardRequestEdit(BaseModel):
     ctn: str
-    call_forward_list: List[CallForwardData]
+    call_forward_edit_request: list
+    call_forward: list
+    cf_type: str = None
+    cf_ctn: str = None
     client: Optional[str] = None
 
-@app.put("/callforward/edit", summary="Установка параметров переадресации (REST, шаг 3)", tags=["REST Beeline"])
+@app.get("/callforward/edit", summary="Установка параметров переадресации (REST, шаг 3)", tags=["REST Beeline"])
 async def edit_call_forward_app(
-    request: PutCallForwardRequest,
+    request: PutCallForwardRequestEdit,
     beeline_rest: BeelineRestClient = Depends(get_beeline_rest_client)
 ):
-    cf_list = [cf.dict() for cf in request.call_forward_list]
     data = beeline_rest.edit_call_forward(
         ctn=request.ctn,
-        call_forward_list=cf_list,
+        call_forward_edit_request=request.call_forward_edit_request,
+        call_forward=request.call_forward,
+        cf_type=request.cf_type,
+        cf_ctn=request.cf_ctn,
         client=request.client
     )
     if data is None:
         raise HTTPException(status_code=502, detail="Beeline REST error /callForward edit")
     return {"status": "success", "requestId": data.get("requestId"), "data": data}
 
-# --- SOAP Beeline (USS WSAPI) ---
+# ============================================================================
+# SOAP Beeline (USS WSAPI)
+# ============================================================================
 class AddDelSoc(BaseModel):
     soc: str
     inclusion_type: str = None

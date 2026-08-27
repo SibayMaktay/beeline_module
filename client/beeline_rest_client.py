@@ -156,7 +156,10 @@ class BeelineRestClient:
     def edit_call_forward(
         self,
         ctn: str,
-        call_forward_list: list,
+        call_forward_edit_request: list,
+        call_forward: list,
+        cf_type: str = None,
+        cf_ctn: str = None,
         client: Optional[str] = None
     ) -> Optional[Any]:
         """
@@ -178,7 +181,10 @@ class BeelineRestClient:
             if h:
                 params["hash"] = h
         data = {
-            "CallForwardListDO": call_forward_list
+            "CallForwardEditRequestDO": call_forward_edit_request,
+            "CallForwardDO": call_forward,
+            "cfType": cf_type,
+            "cfCtn": cf_ctn
         }
         try:
             r = self.session.put(
