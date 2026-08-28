@@ -8,7 +8,7 @@ load_dotenv(dotenv_path=dotenv_path)
 # ============================================================================
 # BEELINE
 # ============================================================================
-beeline_login = os.getenv("BEELINE_LOGIN", "").split()
+beeline_login = os.getenv("BEELINE_LOGIN", "")
 beeline_password = os.getenv("BEELINE_PASSWORD", "").strip()
 beeline_url_base = os.getenv("BEELINE_URL_BASE", "https://my.beeline.ru").strip()
 beeline_rest_signature = os.getenv("BEELINE_REST_SIGNATURE", "").strip()

@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, Depends, Header, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-from typing import Optional, Any, List
+from typing import Optional, Any, List, Dict
 import config.config as config
 
 from client.beeline_soap_client import BeelineSoapClient
@@ -118,6 +118,110 @@ async def remove_subscription_app(
         raise HTTPException(status_code=502, detail="Beeline REST error")
     return {"status": "success", "data": data}
 
+@app.get("/callforward/get/{ctn}", summary="Получить параметры переадресации (объединённый запрос: шаг 1+2)", tags=["REST Beeline"])
+async def get_call_forward_combined(
+    ctn: str,
+    client: Optional[str] = None,
+    beeline_rest: BeelineRestClient = Depends(get_beeline_rest_client)
+) -> Dict[str, Any]:
+    """
+    ОБЪЕДИНЁННЫЙ эндпоинт для получения параметров переадресации.
+    
+    Вместо двух последовательных запросов:
+      1. GET /callforward/request/{ctn}
+      2. GET /callforward/info/{requestId}
+    
+    Теперь один запрос:
+      GET /callforward/get/{ctn}?client=...
+    
+    Параметры:
+      - ctn: номер абонента (обязательный, строка)
+      - client: код клиента (опционально)
+      - X-API-Key: API ключ (передаётся в middleware)
+    
+    Возвращает:
+      {
+        "status": "success",
+        "request_id": 12345,                    # ID запроса для edit_call_forward
+        "call_forward_list": [...],             # Список переадресаций
+        "call_forward_ext": "79001234567",      # Номер переадресации
+        "cf_type": "FORWARDING",                # Тип переадресации
+        "raw_response": {...}                   # Полный ответ Beeline (для отладки)
+      }
+    
+    Ошибки:
+      - 403: Invalid API key (в middleware)
+      - 502: Beeline REST error
+    
+    Примеры:
+      # cURL
+      curl -X GET "http://127.0.0.1:9090/callforward/get/79051234567?client=myapp" \\
+        -H "X-API-Key: bee_test"
+      
+      # Python
+      import requests
+      response = requests.get(
+          "http://127.0.0.1:9090/callforward/get/79051234567",
+          params={"client": "myapp"},
+          headers={"X-API-Key": "bee_test"}
+      )
+      data = response.json()
+      request_id = data["request_id"]
+    """
+    logger.info(f"CallForward: получение параметров для CTN {ctn}, client={client}")
+    logger.debug(f"Шаг 1: создание запроса (request_call_forward)")
+    request_response = beeline_rest.request_call_forward(ctn=ctn,client=client)
+    if request_response is None:
+        logger.error(f"CallForward: ошибка создания запроса для CTN {ctn}")
+        raise HTTPException(
+            status_code=502,
+            detail="Beeline REST error: failed to create call forward request"
+        )
+    request_id = request_response.get("requestId")
+    if not request_id:
+        logger.error(f"CallForward: requestId отсутствует в ответе Beeline")
+        raise HTTPException(
+            status_code=502,
+            detail="Beeline REST error: no requestId in response"
+        )
+    logger.debug(f"Получен requestId: {request_id}")
+    logger.debug(f"Шаг 2: получение параметров (get_call_forward_by_request)")
+    info_response = beeline_rest.get_call_forward_by_request(request_id=request_id,client=client)
+    if info_response is None:
+        logger.error(f"CallForward: ошибка получения параметров для requestId {request_id}")
+        raise HTTPException(
+            status_code=502,
+            detail="Beeline REST error: failed to get call forward info"
+        )
+    logger.debug(f"Получены параметры переадресации")
+
+    call_forward_list = (
+        info_response.get("callForwardList") or
+        info_response.get("CallForwardListDO") or
+        info_response.get("call_forward_list") or
+        []
+    )
+    call_forward_ext = (
+        info_response.get("callForwardExt") or
+        info_response.get("CallForwardExtDO") or
+        info_response.get("call_forward_ext") or
+        ""
+    )
+    cf_type = (
+        info_response.get("cfType") or
+        info_response.get("cf_type") or
+        ""
+    )
+    logger.info(f"CallForward: успешно получены параметры для CTN {ctn}")
+    return {
+        "status": "success",
+        "request_id": request_id,
+        "call_forward_list": call_forward_list,
+        "call_forward_ext": call_forward_ext,
+        "cf_type": cf_type,
+        "raw_response": info_response
+    }
+
 @app.get("/callforward/request/{ctn}", summary="Создать запрос на получение параметров переадресации (REST, шаг 1)", tags=["REST Beeline"])
 async def request_call_forward_app(
     ctn: str,
@@ -162,7 +266,7 @@ async def edit_call_forward_app(
     data = beeline_rest.edit_call_forward(
         ctn=request.ctn,
         call_forward_edit_request=request.call_forward_edit_request,
-        call_forward=request.call_forward,
+        call_forward=request.call_forwarsd,
         cf_type=request.cf_type,
         cf_ctn=request.cf_ctn,
         client=request.client
