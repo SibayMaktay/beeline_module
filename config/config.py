@@ -40,7 +40,7 @@ utm5_turn_on_inet = int(os.getenv("UTM5_TURN_ON_INET", "1"))
 # МОСТ (Beeline ↔ UTM5)
 # ============================================================================
 module_host = os.getenv("MODULE_HOST", "127.0.0.1").strip()
-module_port = int(os.getenv("MODULE_PORT", "9090"))
+module_port = os.getenv("MODULE_PORT", "9090")
 module_api_key = os.getenv("MODULE_API_KEY", "bee_test").strip()
 
 # ============================================================================

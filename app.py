@@ -59,7 +59,7 @@ async def verify_api_key(request: Request, call_next):
     """
     Проверяет API ключ во всех запросах к мосту.
     """
-    if request.url.path in ["/docs", "/redoc", "/openapi.json", "/utm5/health"]:
+    if request.url.path in ["/docs", "/redoc", "/openapi.json", "/utm5/health", "/health"]:
         return await call_next(request)
     api_key = request.headers.get("X-API-Key")
     if not api_key or api_key != BRIDGE_API_KEY:
@@ -69,6 +69,13 @@ async def verify_api_key(request: Request, call_next):
         )
     return await call_next(request)
 
+@app.get("/health", summary="Проверка связи с модулем")
+async def module_health_check():
+    return {
+        "status": "health",
+        "host": config.module_host,
+        "port": config.module_port
+    }
 # ============================================================================
 # REST Beeline (USSS)
 # ============================================================================
