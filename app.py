@@ -273,7 +273,7 @@ async def edit_call_forward_app(
     data = beeline_rest.edit_call_forward(
         ctn=request.ctn,
         call_forward_edit_request=request.call_forward_edit_request,
-        call_forward=request.call_forwarsd,
+        call_forward=request.call_forward,
         cf_type=request.cf_type,
         cf_ctn=request.cf_ctn,
         client=request.client
