@@ -23,6 +23,7 @@ from client.beeline_rest_client import BeelineRestClient
 from routers.utm5_router import router as utm5_router
 from routers.beeline_soap_router import router as soap_router
 from dependencies_utm5 import shutdown_utm5
+from wsdl_check import check_wsdl_health, format_health_response
 
 setup_logging(
     level=config.log_level,
@@ -87,7 +88,7 @@ app.add_middleware(
     RateLimitMiddleware,
     requests_per_window=100,  # 100 запросов в минуту
     window_seconds=60,
-    excluded_paths=["/docs", "/redoc", "/openapi.json", "/health", "/utm5/health"],
+    excluded_paths=["/docs", "/redoc", "/openapi.json", "/health", "/utm5/health", "/health_wsdl"],
     admin_api_key=config.module_api_key  # Admin API key освобождает от rate limiting
 )
 app.include_router(utm5_router)
@@ -100,7 +101,7 @@ async def verify_api_key(request: Request, call_next):
     """
     Проверяет API ключ во всех запросах к мосту.
     """
-    if request.url.path in ["/docs", "/redoc", "/openapi.json", "/utm5/health", "/health"]:
+    if request.url.path in ["/docs", "/redoc", "/openapi.json", "/utm5/health", "/health", "/health_wsdl"]:
         return await call_next(request)
     api_key = request.headers.get("X-API-Key")
     if not api_key or api_key != BRIDGE_API_KEY:
@@ -117,6 +118,9 @@ async def module_health_check():
         "host": config.module_host,
         "port": config.module_port
     }
+@app.get("/health_wsdl", summary="Проверка связи с wsdl")
+async def wsdl_health_check():
+    return check_wsdl_health()
 # ============================================================================
 # REST Beeline (USSS)
 # ============================================================================
