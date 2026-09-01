@@ -25,7 +25,7 @@ from dependencies_utm5 import shutdown_utm5
 
 setup_logging(
     level=config.log_level,
-    log_file="/var/log/beeline_module/module.log"  # Можно указать путь к файлу: "/var/log/beeline_module/module.log"
+    log_file=None  # Можно указать путь к файлу: "/var/log/beeline_module/module.log"
 )
 logger = logging.getLogger(__name__)
 
