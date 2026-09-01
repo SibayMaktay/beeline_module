@@ -21,11 +21,12 @@ from middleware.rate_limiter import RateLimitMiddleware
 from client.beeline_soap_client import BeelineSoapClient
 from client.beeline_rest_client import BeelineRestClient
 from routers.utm5_router import router as utm5_router
+from routers.beeline_soap_router import router as soap_router
 from dependencies_utm5 import shutdown_utm5
 
 setup_logging(
     level=config.log_level,
-    log_file=None  # Можно указать путь к файлу: "/var/log/beeline_module/module.log"
+    log_file="/var/log/beeline_module/module.log"  # Можно указать путь к файлу: "/var/log/beeline_module/module.log"
 )
 logger = logging.getLogger(__name__)
 
@@ -60,7 +61,28 @@ async def lifespan(app: FastAPI):
     shutdown_utm5()
     logger.info("Завершение работы интеграционной службы...")
 
-app = FastAPI(title="BeeLine-UTM5 Integration Module", version="1.0.0", lifespan=lifespan)
+tags_metadata = [
+    {
+        "name": "REST Beeline",
+        "description": "Методы интеграции по REST API Beeline (USSS)",
+    },
+    {
+        "name": "SOAP Beeline",
+        "description": "Методы интеграции по SOAP API Beeline (WSAPI). Все методы доступны через префикс /soap/",
+    },
+    {
+        "name": "UTM5",
+        "description": "Методы интеграции с UTM5",
+    }
+]
+
+app = FastAPI(
+    title="BeeLine-UTM5 Integration Module",
+    version="1.0.0",
+    lifespan=lifespan,
+    openapi_tags=tags_metadata
+)
+
 app.add_middleware(
     RateLimitMiddleware,
     requests_per_window=100,  # 100 запросов в минуту
@@ -69,6 +91,7 @@ app.add_middleware(
     admin_api_key=config.module_api_key  # Admin API key освобождает от rate limiting
 )
 app.include_router(utm5_router)
+app.include_router(soap_router)
 
 BRIDGE_API_KEY = config.module_api_key
 
@@ -274,21 +297,6 @@ async def get_call_forward_by_request_app(
     if data is None:
         raise HTTPException(status_code=502, detail="Beeline REST error /callForward info")
     return {"status": "success", "data": data}
-
-tags_metadata = [
-    {
-        "name": "REST Beeline",
-        "description": "Методы интеграции по REST API Beeline (USSS)",
-    },
-    {
-        "name": "SOAP Beeline",
-        "description": "Методы интеграции по SOAP API Beeline (WSAPI)",
-    },
-    {
-        "name": "UTM5",
-        "description": "Методы интеграции с UTM5",
-    }
-]
 
 if __name__ == "__main__":
     import uvicorn
