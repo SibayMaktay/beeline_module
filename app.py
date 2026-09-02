@@ -128,7 +128,8 @@ async def wsdl_health_check():
 async def get_rests_app(
     ctn: str,
     client: Optional[str] = None,
-    beeline_rest: BeelineRestClient = Depends(get_beeline_rest_client)
+    beeline_rest: BeelineRestClient = Depends(get_beeline_rest_client),
+    api_key: str = Depends(verify_api_key)
 ):
     data = beeline_rest.get_rests(
         ctn,
@@ -142,7 +143,8 @@ async def get_rests_app(
 async def get_subscriptions(
     ctn: str,
     client: Optional[str] = None,
-    beeline_rest: BeelineRestClient = Depends(get_beeline_rest_client)
+    beeline_rest: BeelineRestClient = Depends(get_beeline_rest_client),
+    api_key: str = Depends(verify_api_key)
 ):
     data = beeline_rest.get_subscriptions(
         ctn,
@@ -158,7 +160,8 @@ async def remove_subscription_app(
     subscription_id: str = None,
     type: str = None,
     client: Optional[str] = None,
-    beeline_rest: BeelineRestClient = Depends(get_beeline_rest_client)
+    beeline_rest: BeelineRestClient = Depends(get_beeline_rest_client),
+    api_key: str = Depends(verify_api_key)
 ):
     data = beeline_rest.remove_subscription(
         ctn,
@@ -174,7 +177,8 @@ async def remove_subscription_app(
 async def get_call_forward_combined(
     ctn: str,
     client: Optional[str] = None,
-    beeline_rest: BeelineRestClient = Depends(get_beeline_rest_client)
+    beeline_rest: BeelineRestClient = Depends(get_beeline_rest_client),
+    api_key: str = Depends(verify_api_key)
 ) -> Dict[str, Any]:
     """
     ОБЪЕДИНЁННЫЙ эндпоинт для получения параметров переадресации.
@@ -278,7 +282,8 @@ async def get_call_forward_combined(
 async def request_call_forward_app(
     ctn: str,
     client: Optional[str] = None,
-    beeline_rest: BeelineRestClient = Depends(get_beeline_rest_client)
+    beeline_rest: BeelineRestClient = Depends(get_beeline_rest_client),
+    api_key: str = Depends(verify_api_key)
 ):
     data = beeline_rest.request_call_forward(
         ctn,
@@ -292,7 +297,8 @@ async def request_call_forward_app(
 async def get_call_forward_by_request_app(
     request_id: int,
     client: Optional[str] = None,
-    beeline_rest: BeelineRestClient = Depends(get_beeline_rest_client)
+    beeline_rest: BeelineRestClient = Depends(get_beeline_rest_client),
+    api_key: str = Depends(verify_api_key)
 ):
     data = beeline_rest.get_call_forward_by_request(
         request_id,
@@ -313,7 +319,8 @@ class PutCallForwardRequestEdit(BaseModel):
 @app.get("/callforward/edit", summary="Установка параметров переадресации (REST, шаг 3)", tags=["REST Beeline"])
 async def edit_call_forward_app(
     request: PutCallForwardRequestEdit,
-    beeline_rest: BeelineRestClient = Depends(get_beeline_rest_client)
+    beeline_rest: BeelineRestClient = Depends(get_beeline_rest_client),
+    api_key: str = Depends(verify_api_key)
 ):
     data = beeline_rest.edit_call_forward(
         ctn=request.ctn,
