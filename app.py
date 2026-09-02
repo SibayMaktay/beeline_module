@@ -124,7 +124,7 @@ async def wsdl_health_check():
 # ============================================================================
 # REST Beeline (USSS)
 # ============================================================================
-@app.get("/rests/{ctn}", summary="Остатки пакетов абонента (REST)", tags=["REST Beeline"])
+@app.post("/rests/{ctn}", summary="Остатки пакетов абонента (REST)", tags=["REST Beeline"])
 async def get_rests_app(
     ctn: str,
     client: Optional[str] = None,
