@@ -88,7 +88,7 @@ app.add_middleware(
     RateLimitMiddleware,
     requests_per_window=100,  # 100 запросов в минуту
     window_seconds=60,
-    excluded_paths=["/docs", "/redoc", "/openapi.json", "/health", "/utm5/health", "/health_wsdl", "/rests"],
+    excluded_paths=["/docs", "/redoc", "/openapi.json", "/health", "/utm5/health", "/health_wsdl"],
     admin_api_key=config.module_api_key  # Admin API key освобождает от rate limiting
 )
 app.include_router(utm5_router)
@@ -129,6 +129,7 @@ async def get_rests_app(
     ctn: str,
     client: Optional[str] = None,
     beeline_rest: BeelineRestClient = Depends(get_beeline_rest_client),
+    api_key: str = Depends(verify_api_key)
 ):
     data = beeline_rest.get_rests(
         ctn,

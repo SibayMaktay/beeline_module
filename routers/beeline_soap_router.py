@@ -26,8 +26,8 @@ router = APIRouter(prefix="/soap", tags=["SOAP Beeline"])
 
 
 def verify_api_key(x_api_key: str = Header(..., alias="X-API-Key")):
-    from config.config import api_key
-    if x_api_key != api_key:
+    from config.config import module_api_key
+    if x_api_key != module_api_key:
         raise HTTPException(status_code=403, detail="Invalid API key")
     return x_api_key
 
