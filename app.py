@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 
 # --- Зависимости и DI-фабрики ---
 def verify_api_key(x_api_key: str = Header(..., alias="X-API-Key")):
-    if x_api_key != config.api_key:
+    if x_api_key != config.module_api_key:
         raise HTTPException(status_code=403, detail="Invalid API key")
     return x_api_key
 
