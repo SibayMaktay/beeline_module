@@ -88,7 +88,7 @@ app.add_middleware(
     RateLimitMiddleware,
     requests_per_window=100,  # 100 запросов в минуту
     window_seconds=60,
-    excluded_paths=["/docs", "/redoc", "/openapi.json", "/health", "/utm5/health", "/health_wsdl"],
+    excluded_paths=["/docs", "/redoc", "/openapi.json", "/health", "/utm5/health", "/health_wsdl", "/rests", "/subsriptions", ".callforward"],
     admin_api_key=config.module_api_key  # Admin API key освобождает от rate limiting
 )
 app.include_router(utm5_router)
