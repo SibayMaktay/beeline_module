@@ -129,7 +129,6 @@ async def get_rests_app(
     ctn: str,
     client: Optional[str] = None,
     beeline_rest: BeelineRestClient = Depends(get_beeline_rest_client),
-    api_key: str = Depends(verify_api_key)
 ):
     data = beeline_rest.get_rests(
         ctn,
