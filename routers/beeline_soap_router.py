@@ -239,7 +239,7 @@ def suspend_ctn_app(
 
 
 @router.post("/restoreCTN", summary="Разблокировка номера")
-def restore_ctn(
+def restore_ctn_app(
     request: SuspendRestoreCTN,
     ctn: str,
     client: BeelineSoapClient = Depends(get_soap_client),
@@ -252,6 +252,7 @@ def restore_ctn(
     - **comment**: Комментарий к разблокировке
     """
     result = client.restore_ctn(
+        ctn,
         reason_code=request.reason_code,
         actv_date=request.actv_date
     )

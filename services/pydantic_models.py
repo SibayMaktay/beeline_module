@@ -41,7 +41,7 @@ class AddDelSoc(BaseModel):
 
 class SuspendRestoreCTN(BaseModel):
     """Модель для блокировки/разблокировки номера."""
-    reason_code: str = Field(..., description="Код причины блокировки", min_length=1, max_length=50)
+    reason_code: str = Field(..., description="Код причины блокировки")
     actv_date: Optional[str] = Field(None, description="Дата активации")
 
 
