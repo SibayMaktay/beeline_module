@@ -89,7 +89,7 @@ app.add_middleware(
     requests_per_window=100,  # 100 запросов в минуту
     window_seconds=60,
     excluded_paths=["/docs", "/redoc", "/openapi.json", "/health", "/utm5/health"],
-    admin_api_key=config.module_api_key  # Admin API key освобождает от rate limiting
+    admin_api_key=config.module_admin_api_key  # Admin API key освобождает от rate limiting
 )
 app.include_router(utm5_router)
 app.include_router(soap_router)
@@ -97,7 +97,7 @@ app.include_router(soap_router)
 BRIDGE_API_KEY = config.module_api_key
 
 @app.middleware("http")
-async def verify_api_key(request: Request, call_next):
+async def check_api_key_middleware(request: Request, call_next):
     """
     Проверяет API ключ во всех запросах к мосту.
     """
@@ -128,6 +128,7 @@ async def wsdl_health_check():
 async def get_rests_app(
     ctn: str,
     client: Optional[str] = None,
+    api_key: str = Depends(verify_api_key),
     beeline_rest: BeelineRestClient = Depends(get_beeline_rest_client),
 ):
     data = beeline_rest.get_rests(
