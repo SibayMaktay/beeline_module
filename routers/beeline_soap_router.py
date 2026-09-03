@@ -218,8 +218,9 @@ def get_services_list_paged(
 # ============================================================================
 
 @router.post("/suspendCTN", summary="Добровольная блокировка номера")
-def suspend_ctn(
+def suspend_ctn_app(
     request: SuspendRestoreCTN,
+    ctn: str,
     client: BeelineSoapClient = Depends(get_soap_client),
     api_key: str = Depends(verify_api_key)
 ):
@@ -230,8 +231,9 @@ def suspend_ctn(
     - **comment**: Комментарий к блокировке
     """
     result = client.suspend_ctn(
-        contract_number=request.contractNumber,
-        comment=request.comment
+        ctn,
+        reason_code=request.reason_code,
+        actv_date=request.actv_date
     )
     return {"status": "success", "data": result}
 
@@ -239,6 +241,7 @@ def suspend_ctn(
 @router.post("/restoreCTN", summary="Разблокировка номера")
 def restore_ctn(
     request: SuspendRestoreCTN,
+    ctn: str,
     client: BeelineSoapClient = Depends(get_soap_client),
     api_key: str = Depends(verify_api_key)
 ):
@@ -249,8 +252,8 @@ def restore_ctn(
     - **comment**: Комментарий к разблокировке
     """
     result = client.restore_ctn(
-        contract_number=request.contractNumber,
-        comment=request.comment
+        reason_code=request.reason_code,
+        actv_date=request.actv_date
     )
     return {"status": "success", "data": result}
 
