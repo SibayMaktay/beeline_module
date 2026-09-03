@@ -88,7 +88,7 @@ app.add_middleware(
     RateLimitMiddleware,
     requests_per_window=100,  # 100 запросов в минуту
     window_seconds=60,
-    excluded_paths=["/docs", "/redoc", "/openapi.json", "/health", "/utm5/health", "/health_wsdl", "/rests", "/subsriptions", ".callforward"],
+    excluded_paths=["/docs", "/redoc", "/openapi.json", "/health", "/utm5/health"],
     admin_api_key=config.module_api_key  # Admin API key освобождает от rate limiting
 )
 app.include_router(utm5_router)
@@ -124,12 +124,11 @@ async def wsdl_health_check():
 # ============================================================================
 # REST Beeline (USSS)
 # ============================================================================
-@app.post("/rests/{ctn}", summary="Остатки пакетов абонента (REST)", tags=["REST Beeline"])
+@app.get("/rests/{ctn}", summary="Остатки пакетов абонента (REST)", tags=["REST Beeline"])
 async def get_rests_app(
     ctn: str,
     client: Optional[str] = None,
     beeline_rest: BeelineRestClient = Depends(get_beeline_rest_client),
-    api_key: str = Depends(verify_api_key)
 ):
     data = beeline_rest.get_rests(
         ctn,
