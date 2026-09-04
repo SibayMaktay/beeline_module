@@ -70,9 +70,9 @@ print(
     delete_shared_number_list_dol_template(
         session_id="ABCD-1234", ctn_from="7000999", ctn_to_list="<num>7000888</num>", ctn_to="7000245"
     ),
-    personal_data_update_template(
-        session_id="ABCD-1234", data="<Data><type>update</type></Data>", login="QWERTY"
-    ),
+    # personal_data_update_template(
+    #     session_id="ABCD-1234", data="<type>update</type><type>update</type><type>update</type><type>update</type>", login="QWERTY"
+    # ),
     personal_data_result_template(
         session_id="ABCD-1234", request_id="REQ-0001", login="QWERTY"
     ),
@@ -88,9 +88,9 @@ print(
     get_ban_info_list_template(
         session_id="ABCD-1234", login="QWERTY"
     ),
-    add_shared_number_dol_template(
-        session_id="ABCD-1234", request_id="REQ-0001", ctn_to="7000245", ctn_type="type1", soc="SOC-912", prepaid_state_chk_cancel="N", check_add_number_registration="Y"
-    ),
+    # add_shared_number_dol_template(
+    #     session_id="ABCD-1234", request_id="REQ-0001", ctn_to="7000245", ctn_type="type1", soc="SOC-912", prepaid_state_chk_cancel="N", check_add_number_registration="Y"
+    # ),
     create_bill_calls_request_template(
         session_id="ABCD-1234", ban="9000666", bill_date="2024-06-01", login="QWERTY", ctn_list="<num>7000111</num><num>7000222</num>"
     ),

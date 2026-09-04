@@ -33,7 +33,7 @@ def _make_soap_request(xml_payload: str, action: str) -> Optional[Any]:
             return {"raw_xml": response.text}
             
     except requests.exceptions.HTTPError as e:
-        logger.error(f"HTTP ошибка SOAP: {e}. Ответ: {response.text[:200]}")
+        logger.error(f"HTTP ошибка SOAP: {e}. Ответ: {response.text[:20000]}")
         return None
     except requests.exceptions.RequestException as e:
         logger.error(f"Сетевая ошибка при запросе {action}: {e}")
