@@ -221,16 +221,16 @@ def get_services_list_paged(
 def suspend_ctn_app(
     request: SuspendRestoreCTN,
     ctn: str,
-    client: BeelineSoapClient = Depends(get_soap_client),
-    api_key: str = Depends(verify_api_key)
+    api_key: str = Depends(verify_api_key),
+    beeline_soap: BeelineSoapClient = Depends(get_soap_client),
 ):
     """
     Добровольная блокировка номера (suspend).
 
-    - **contractNumber**: Номер контракта
-    - **comment**: Комментарий к блокировке
+    - **reason_code**: причина блокировки
+    - **actv_date**: дата блокировки
     """
-    result = client.suspend_ctn(
+    result = beeline_soap.suspend_ctn(
         ctn,
         reason_code=request.reason_code,
         actv_date=request.actv_date
