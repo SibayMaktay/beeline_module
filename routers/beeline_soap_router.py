@@ -56,7 +56,7 @@ def get_ctn_info_list_app(
     - **ban**: номер ban
     """
     result = beeline_soap.get_ctn_info_list(
-        ctn,
+        ctn=ctn,
         ban=request.ban
     )
     return {"status": "success", "data": result}
