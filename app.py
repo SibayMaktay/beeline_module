@@ -122,7 +122,7 @@ async def wsdl_health_check():
 # ============================================================================
 # REST Beeline (USSS)
 # ============================================================================
-@app.get("/rests/{ctn}", summary="Остатки пакетов абонента (REST)", tags=["REST Beeline"])
+@app.get("/rest/rests", summary="Остатки пакетов абонента (REST)", tags=["REST Beeline"])
 async def get_rests_app(
     ctn: str,
     client: Optional[str] = None,
@@ -137,7 +137,7 @@ async def get_rests_app(
         raise HTTPException(status_code=502, detail="Beeline REST error")
     return {"status": "success", "data": data}
 
-@app.get("/subscriptions/{ctn}", summary="Активные подписки абонента (REST)", tags=["REST Beeline"])
+@app.get("/rest/subscriptions", summary="Активные подписки абонента (REST)", tags=["REST Beeline"])
 async def get_subscriptions(
     ctn: str,
     client: Optional[str] = None,
@@ -152,7 +152,7 @@ async def get_subscriptions(
         raise HTTPException(status_code=502, detail="Beeline REST error")
     return {"status": "success", "data": data}
 
-@app.get("/subscriptions/remove/{ctn}", summary="отключение подписки абонента (REST)", tags=["REST Beeline"])
+@app.get("/rest/subscriptions/remove", summary="отключение подписки абонента (REST)", tags=["REST Beeline"])
 async def remove_subscription_app(
     ctn: str,
     subscription_id: str = None,
@@ -171,7 +171,7 @@ async def remove_subscription_app(
         raise HTTPException(status_code=502, detail="Beeline REST error")
     return {"status": "success", "data": data}
 
-@app.get("/callforward/get/{ctn}", summary="Получить параметры переадресации (объединённый запрос: шаг 1+2)", tags=["REST Beeline"])
+@app.get("/rest/callforward/get", summary="Получить параметры переадресации (объединённый запрос: шаг 1+2)", tags=["REST Beeline"])
 async def get_call_forward_combined(
     ctn: str,
     client: Optional[str] = None,
@@ -276,7 +276,7 @@ async def get_call_forward_combined(
         "raw_response": info_response
     }
 
-@app.get("/callforward/request/{ctn}", summary="Создать запрос на получение параметров переадресации (REST, шаг 1)", tags=["REST Beeline"])
+@app.get("/rest/callforward/request", summary="Создать запрос на получение параметров переадресации (REST, шаг 1)", tags=["REST Beeline"])
 async def request_call_forward_app(
     ctn: str,
     client: Optional[str] = None,
@@ -291,7 +291,7 @@ async def request_call_forward_app(
         raise HTTPException(status_code=502, detail="Beeline REST error /callForward request")
     return {"status": "success", "requestId": data.get("requestId"), "data": data}
 
-@app.get("/callforward/info/{request_id}", summary="Получение параметров переадресации по requestId (REST, шаг 2)", tags=["REST Beeline"])
+@app.get("/rest/callforward/info", summary="Получение параметров переадресации по requestId (REST, шаг 2)", tags=["REST Beeline"])
 async def get_call_forward_by_request_app(
     request_id: int,
     client: Optional[str] = None,
@@ -314,7 +314,7 @@ class PutCallForwardRequestEdit(BaseModel):
     cf_ctn: str = None
     client: Optional[str] = None
 
-@app.get("/callforward/edit", summary="Установка параметров переадресации (REST, шаг 3)", tags=["REST Beeline"])
+@app.get("/rest/callforward/edit", summary="Установка параметров переадресации (REST, шаг 3)", tags=["REST Beeline"])
 async def edit_call_forward_app(
     request: PutCallForwardRequestEdit,
     beeline_rest: BeelineRestClient = Depends(get_beeline_rest_client),
