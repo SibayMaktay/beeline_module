@@ -227,6 +227,7 @@ def suspend_ctn_app(
     """
     Добровольная блокировка номера (suspend).
 
+    - **ctn**: номер ctn
     - **reason_code**: причина блокировки
     - **actv_date**: дата блокировки
     """
@@ -248,6 +249,7 @@ def restore_ctn_app(
     """
     Разблокировка номера (restore).
 
+    - **ctn**: номер ctn
     - **reason_code**: причина разблокировки
     - **actv_date**: дата разблокировки
     """
@@ -266,18 +268,19 @@ def restore_ctn_app(
 @router.post("/replaceSIM", summary="Замена SIM-карты")
 def replace_sim(
     request: ReplaceSim,
+    ctn: str,
+    api_key: str = Depends(verify_api_key),
     client: BeelineSoapClient = Depends(get_soap_client),
-    api_key: str = Depends(verify_api_key)
 ):
     """
     Замена SIM-карты.
 
-    - **contractNumber**: Номер контракта
-    - **newICCID**: Новый ICCID SIM-карты
+    - **ctn**: номер ctn
+    - **serial_number**: Новый ICCID SIM-карты
     """
     result = client.replace_sim(
-        contract_number=request.contractNumber,
-        new_iccid=request.newICCID
+        ctn,
+        serial_number=request.serial_number,
     )
     return {"status": "success", "data": result}
 
