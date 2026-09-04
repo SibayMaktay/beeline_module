@@ -78,7 +78,7 @@ class BeelineSoapClient:
             ctn=ctn,
             login=config.beeline_login
         )
-        return self._make_soap_request(
+        return _make_soap_request(
             xml,
             "urn:uss-wsapi:Subscriber:SubscriberInterface:getCTNInfoListRequest"
         )
@@ -102,7 +102,7 @@ class BeelineSoapClient:
             records_per_page=records_per_page,
             login=config.beeline_login
         )
-        return self._make_soap_request(
+        return _make_soap_request(
             xml,
             "urn:uss-wsapi:Subscriber:SubscriberInterface:getCTNInfoListRequest"
         )
