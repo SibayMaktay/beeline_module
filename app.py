@@ -48,7 +48,7 @@ def get_beeline_rest_client():
 
 def get_beeline_soap_client():
     return BeelineSoapClient(
-        token_provider=get_beeline_token()
+        token_provider=get_beeline_token
     )
 
 @asynccontextmanager
