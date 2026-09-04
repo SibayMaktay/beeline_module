@@ -266,7 +266,7 @@ def restore_ctn_app(
 # ============================================================================
 
 @router.post("/replaceSIM", summary="Замена SIM-карты")
-def replace_sim(
+def replace_sim_app(
     request: ReplaceSim,
     ctn: str,
     api_key: str = Depends(verify_api_key),
