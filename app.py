@@ -38,7 +38,7 @@ def verify_api_key(x_api_key: str = Header(..., alias="X-API-Key")):
     return x_api_key
 
 def get_beeline_rest_client():
-    token = get_beeline_token()
+    token = get_beeline_token
     client = BeelineRestClient(
         base_url=config.beeline_url_base,
         signature=config.beeline_rest_signature
