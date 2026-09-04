@@ -242,16 +242,16 @@ def suspend_ctn_app(
 def restore_ctn_app(
     request: SuspendRestoreCTN,
     ctn: str,
-    client: BeelineSoapClient = Depends(get_soap_client),
-    api_key: str = Depends(verify_api_key)
+    api_key: str = Depends(verify_api_key),
+    beeline_soap: BeelineSoapClient = Depends(get_soap_client),
 ):
     """
     Разблокировка номера (restore).
 
-    - **contractNumber**: Номер контракта
-    - **comment**: Комментарий к разблокировке
+    - **reason_code**: причина разблокировки
+    - **actv_date**: дата разблокировки
     """
-    result = client.restore_ctn(
+    result = beeline_soap.restore_ctn(
         ctn,
         reason_code=request.reason_code,
         actv_date=request.actv_date

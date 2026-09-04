@@ -241,7 +241,7 @@ class BeelineSoapClient:
         """
         Снятие блокировки номера (restoreCTN).
         """
-        session_id = self.token_provider()
+        session_id = self.token_provider
         xml = restore_ctn_template(
             ctn=ctn,
             reason_code=reason_code,
