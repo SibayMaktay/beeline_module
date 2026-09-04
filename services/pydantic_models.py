@@ -47,7 +47,7 @@ class SuspendRestoreCTN(BaseModel):
 
 class ReplaceSim(BaseModel):
     """Модель для замены SIM-карты."""
-    serial_number: str = Field(..., description="Серийный номер SIM-карты", min_length=10, max_length=30)
+    serial_number: str = Field(..., description="Серийный номер SIM-карты")
 
 
 class Details(BaseModel):
