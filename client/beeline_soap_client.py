@@ -219,7 +219,7 @@ class BeelineSoapClient:
         """
         Добровольная блокировка номера (suspendCTN).
         """
-        session_id = self.token_provider()
+        session_id = self.token_provider
         xml = suspend_ctn_template(
             ctn=ctn,
             reason_code=reason_code,

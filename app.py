@@ -47,9 +47,7 @@ def get_beeline_rest_client():
     return client
 
 def get_beeline_soap_client():
-    return BeelineSoapClient(
-        token_provider=get_beeline_token
-    )
+    return BeelineSoapClient(token_provider=get_beeline_token)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
