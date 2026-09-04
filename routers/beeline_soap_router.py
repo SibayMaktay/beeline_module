@@ -45,7 +45,7 @@ def get_soap_client() -> BeelineSoapClient:
 @router.post("/getCTNInfoList", summary="Получить информацию об абонентах")
 def get_ctn_info_list_app(
     request: CTNInfoList,
-    ctn: str,
+    ctn: str = None,
     api_key: str = Depends(verify_api_key),
     beeline_soap: BeelineSoapClient = Depends(get_soap_client),
 ):
@@ -65,7 +65,7 @@ def get_ctn_info_list_app(
 @router.post("/getCTNInfoListPaged", summary="Получить информацию об абонентах (пагинация)")
 def get_ctn_info_list_paged_app(
     request: CTNInfoListPaged,
-    ctn: str,
+    ctn: str = None,
     api_key: str = Depends(verify_api_key),
     beeline_soap: BeelineSoapClient = Depends(get_soap_client),
 ):
@@ -93,6 +93,7 @@ def get_ctn_info_list_paged_app(
 @router.post("/getPaymentList", summary="Получить список платежей")
 def get_payment_list_app(
     request: PaymentList,
+    ctn: str = None,
     api_key: str = Depends(verify_api_key),
     beeline_soap: BeelineSoapClient = Depends(get_soap_client),
 ):
@@ -114,6 +115,7 @@ def get_payment_list_app(
 @router.post("/getPaymentListPaged", summary="Получить список платежей (пагинация)")
 def get_payment_list_paged_app(
     request: PaymentListPaged,
+    ctn: str = None,
     api_key: str = Depends(verify_api_key),
     beeline_soap: BeelineSoapClient = Depends(get_soap_client),
 ):
