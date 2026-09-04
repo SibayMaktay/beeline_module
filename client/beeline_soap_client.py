@@ -3,8 +3,20 @@ import requests
 from typing import Optional, Any, Dict
 import config.config as config
 from templates.wsdl_template_beeline import *
+import re
 
 logger = logging.getLogger(__name__)
+
+def parse_soap_error(response_test):
+    """
+    Парсит SOAP-ошибку Beeline, ищет <errorCode>и<errorDescription>.
+    Вернёт dict, либо None если не найдено.
+    """
+    errcode = re.search(r"<errorCode>(\d+)</errorCode>", response_test)
+    errdesc = re.search(r"<errorDescription>([\w\s]+)</errorDescription>", response_test)
+    if errcode and errdesc:
+        return {"code": errcode.group(1), "desc": errdesc.group(1)}
+    return None
 
 def _make_soap_request(xml_payload: str, action: str) -> Optional[Any]:
     """
@@ -33,8 +45,13 @@ def _make_soap_request(xml_payload: str, action: str) -> Optional[Any]:
             return {"raw_xml": response.text}
             
     except requests.exceptions.HTTPError as e:
-        logger.error(f"HTTP ошибка SOAP: {e}. Ответ: {response.text[:20000]}")
-        return None
+        err = parse_soap_error(response.text)
+        if err:
+            logger.error(f"Beeline SOAP Forbidden: {err['desc']} (code: {err['code']})")
+            return {"error": "forbidden", "desc": err["desc"], "code": err["code"]}
+        else:
+            logger.error(f"HTTP ошибка SOAP: {e}. Ответ: {response.text[:200]}")
+            return None
     except requests.exceptions.RequestException as e:
         logger.error(f"Сетевая ошибка при запросе {action}: {e}")
         return None
