@@ -57,7 +57,7 @@ class Details(BaseModel):
 
 class CTNInfoList(BaseModel):
     """Модель для получения информации об абоненте."""
-    ban: str = Field(..., description="Лицевой счёт (BAN)", min_length=1, max_length=50)
+    ban: str = Field(..., description="Лицевой счёт (BAN)")
 
 
 class CTNInfoListPaged(CTNInfoList):
