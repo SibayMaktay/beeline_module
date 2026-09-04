@@ -269,7 +269,7 @@ class BeelineSoapClient:
             session_id=session_id,
             login=config.beeline_login
         )
-        return self._make_soap_request(
+        return _make_soap_request(
             xml,
             "urn:uss-wsapi:Subscriber:SubscriberInterface:restoreCTNRequest"
         )
