@@ -270,7 +270,7 @@ def replace_sim_app(
     request: ReplaceSim,
     ctn: str,
     api_key: str = Depends(verify_api_key),
-    client: BeelineSoapClient = Depends(get_soap_client),
+    beeline_soap: BeelineSoapClient = Depends(get_soap_client),
 ):
     """
     Замена SIM-карты.
@@ -278,7 +278,7 @@ def replace_sim_app(
     - **ctn**: номер ctn
     - **serial_number**: Новый ICCID SIM-карты
     """
-    result = client.replace_sim(
+    result = beeline_soap.replace_sim(
         ctn,
         serial_number=request.serial_number,
     )

@@ -90,7 +90,7 @@ class TokenManager:
         token = self._authenticate_soap()
         if token:
             self._set_token(token)
-            logger.info("Аутентификация Beeline успешна через SOAP.")
+            logger.info(f"Аутентификация Beeline успешна через SOAP. - {token}")
             return
 
         # Пробуем REST метод
