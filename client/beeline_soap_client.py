@@ -271,7 +271,7 @@ class BeelineSoapClient:
         )
         return _make_soap_request(
             xml,
-            "urn:uss-wsapi:Subscriber:SubscriberInterface:restoreCTNRequest"
+            "urn:uss-wsapi:Subscriber:SubscriberInterface:replaceSIMRequest"
         )
 
     def get_details(
