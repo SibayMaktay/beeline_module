@@ -105,9 +105,10 @@ def get_payment_list_app(
     - **dateTo**: Дата окончания периода (YYYY-MM-DD)
     """
     result = beeline_soap.get_payment_list(
-        contract_number=request.contractNumber,
-        date_from=request.dateFrom,
-        date_to=request.dateTo
+        ctn=ctn,
+        ban=request.ban,
+        start_date=request.start_date,
+        end_date=request.end_date
     )
     return {"status": "success", "data": result}
 
@@ -123,11 +124,12 @@ def get_payment_list_paged_app(
     Получение списка платежей с пагинацией.
     """
     result = beeline_soap.get_payment_list_paged(
-        contract_number=request.contractNumber,
-        date_from=request.dateFrom,
-        date_to=request.dateTo,
-        page_number=request.pageNumber,
-        page_size=request.pageSize
+        ctn=ctn,
+        ban=request.ban,
+        start_date=request.start_date,
+        end_date=request.end_date,
+        page=request.page,
+        records_per_page=request.records_per_page
     )
     return {"status": "success", "data": result}
 
@@ -135,15 +137,32 @@ def get_payment_list_paged_app(
 @router.post("/getUnbilledBalance", summary="Получить небиллингованный баланс")
 def get_unbilled_balance_app(
     request: CTNInfoList,
+    ctn: str,
     api_key: str = Depends(verify_api_key),
     beeline_soap: BeelineSoapClient = Depends(get_soap_client),
 ):
     """
     Получение небиллингованного баланса по номеру контракта.
     """
-    # Используем первый номер из списка
-    contract_number = request.contractNumbers[0] if request.contractNumbers else ""
-    result = beeline_soap.get_unbilled_balance(contract_number=contract_number)
+    result = beeline_soap.get_unbilled_balance(
+        ctn=ctn
+    )
+    return {"status": "success", "data": result}
+
+
+@router.post("/getUnbilledCallsList", summary="Получения информации о необилленных звонках абонента")
+def get_unbilled_calls_list_app(
+    request: getUnbilledCallsList,
+    ctn: str,
+    api_key: str = Depends(verify_api_key),
+    beeline_soap: BeelineSoapClient = Depends(get_soap_client),
+):
+    """
+    Получение небиллингованного баланса по номеру контракта.
+    """
+    result = beeline_soap.get_unbilled_balance(
+        ctn=ctn
+    )
     return {"status": "success", "data": result}
 
 
@@ -154,6 +173,7 @@ def get_unbilled_balance_app(
 @router.post("/addDelSOC", summary="Подключить/отключить услугу")
 def add_del_soc_app(
     request: AddDelSoc,
+    ctn: str,
     api_key: str = Depends(verify_api_key),
     beeline_soap: BeelineSoapClient = Depends(get_soap_client),
 ):
@@ -166,10 +186,11 @@ def add_del_soc_app(
     - **params**: Параметры услуги (опционально)
     """
     result = beeline_soap.add_del_soc(
-        contract_number=request.contractNumber,
-        action=request.action,
-        soc_code=request.socCode,
-        params=request.params
+        ctn,
+        soc=request.soc,
+        inclusion_type=request.inclusion_type,
+        eff_date=request.eff_date,
+        exp_date=request.exp_date
     )
     return {"status": "success", "data": result}
 
@@ -201,19 +222,24 @@ def change_pp_app(
 @router.post("/getServicesList", summary="Получить список услуг")
 def get_services_list_app(
     request: ServicesList,
+    ctn: str = None,
     api_key: str = Depends(verify_api_key),
     beeline_soap: BeelineSoapClient = Depends(get_soap_client),
 ):
     """
     Получение списка активных услуг абонента.
     """
-    result = beeline_soap.get_services_list(contract_number=request.contractNumber)
+    result = beeline_soap.get_services_list(
+        ctn=ctn,
+        ban=request.ban
+    )
     return {"status": "success", "data": result}
 
 
 @router.post("/getServicesListPaged", summary="Получить список услуг (пагинация)")
 def get_services_list_paged_app(
     request: ServicesListPaged,
+    ctn: str = None,
     api_key: str = Depends(verify_api_key),
     beeline_soap: BeelineSoapClient = Depends(get_soap_client),
 ):
@@ -221,9 +247,10 @@ def get_services_list_paged_app(
     Получение списка услуг с пагинацией.
     """
     result = beeline_soap.get_services_list_paged(
-        contract_number=request.contractNumber,
-        page_number=request.pageNumber,
-        page_size=request.pageSize
+        ctn=ctn,
+        ban=request,
+        page=request.page,
+        ctn_amount_per_page=request.ctn_amount_per_page
     )
     return {"status": "success", "data": result}
 
@@ -303,19 +330,24 @@ def replace_sim_app(
 @router.post("/getSIMList", summary="Получить список SIM-карт")
 def get_sim_list_app(
     request: SIMList,
+    ctn: str = None,
     api_key: str = Depends(verify_api_key),
     beeline_soap: BeelineSoapClient = Depends(get_soap_client),
 ):
     """
     Получение списка SIM-карт абонента.
     """
-    result = beeline_soap.get_sim_list(contract_number=request.contractNumber)
+    result = beeline_soap.get_sim_list(
+        ctn=ctn,
+        ban=request.ban
+    )
     return {"status": "success", "data": result}
 
 
 @router.post("/getSIMListPaged", summary="Получить список SIM-карт (пагинация)")
 def get_sim_list_paged_app(
     request: SIMListPaged,
+    ctn: str = None,
     api_key: str = Depends(verify_api_key),
     beeline_soap: BeelineSoapClient = Depends(get_soap_client),
 ):
@@ -323,9 +355,10 @@ def get_sim_list_paged_app(
     Получение списка SIM-карт с пагинацией.
     """
     result = beeline_soap.get_sim_list_paged(
-        contract_number=request.contractNumber,
-        page_number=request.pageNumber,
-        page_size=request.pageSize
+        ctn=ctn,
+        ban=request.ban,
+        page=request.page,
+        records_per_page=request.records_per_page
     )
     return {"status": "success", "data": result}
 
@@ -362,7 +395,13 @@ def get_request_list_app(
     """
     Получение списка запросов на детализацию.
     """
-    result = beeline_soap.get_request_list(contract_number=request.contractNumber)
+    result = beeline_soap.get_request_list(
+        start_date=request.start_date,
+        end_date=request.end_date,
+        request_id=request.request_id,
+        page=request.page,
+        records_per_page=request.records_per_page
+    )
     return {"status": "success", "data": result}
 
 

@@ -5,11 +5,6 @@ from pydantic import BaseModel, Field, field_validator
 from typing import Optional, List, Dict, Any
 import re
 
-
-# ============================================================================
-# REST Beeline - Call Forward
-# ============================================================================
-
 class PutCallForwardRequestEdit(BaseModel):
     """Модель для редактирования переадресации."""
     ctn: str = Field(..., description="Номер абонента", min_length=10, max_length=15)
@@ -50,17 +45,17 @@ class ReplaceSim(BaseModel):
     serial_number: str = Field(..., description="Серийный номер SIM-карты")
 
 
-class Details(BaseModel):
+class getDetails(BaseModel):
     """Модель для получения детализации."""
-    request_id: str = Field(..., description="ID запроса", min_length=1, max_length=100)
+    request_id: str = Field(..., description="ID запроса")
 
 
-class CTNInfoList(BaseModel):
+class getCTNInfoList(BaseModel):
     """Модель для получения информации об абоненте."""
     ban: str = Field(..., description="Лицевой счёт (BAN)")
 
 
-class CTNInfoListPaged(CTNInfoList):
+class CTNInfoListPaged(getCTNInfoList):
     """Модель для получения информации об абоненте с пагинацией."""
     page: Optional[int] = Field(None, description="Номер страницы", ge=1)
     records_per_page: Optional[str] = Field(None, description="Записей на страницу")
@@ -68,14 +63,14 @@ class CTNInfoListPaged(CTNInfoList):
 
 class ChangePP(BaseModel):
     """Модель для смены тарифного плана."""
-    price_plan: str = Field(..., description="Код тарифного плана", min_length=1, max_length=50)
+    price_plan: str = Field(..., description="Код тарифного плана")
     future_date: Optional[str] = Field(None, description="Дата смены тарифа")
     free_change: Optional[str] = Field(None, description="Флаг бесплатной смены")
 
 
 class SIMList(BaseModel):
     """Модель для получения списка SIM-карт."""
-    ban: str = Field(..., description="Лицевой счёт (BAN)", min_length=1, max_length=50)
+    ban: str = Field(..., description="Лицевой счёт (BAN)")
 
 
 class SIMListPaged(SIMList):
@@ -95,7 +90,7 @@ class RequestList(BaseModel):
 
 class ServicesList(BaseModel):
     """Модель для получения списка услуг."""
-    ban: str = Field(..., description="Лицевой счёт (BAN)", min_length=1, max_length=50)
+    ban: str = Field(..., description="Лицевой счёт (BAN)")
 
 
 class ServicesListPaged(ServicesList):
@@ -106,7 +101,7 @@ class ServicesListPaged(ServicesList):
 
 class PaymentList(BaseModel):
     """Модель для получения информации о платежах."""
-    ban: str = Field(..., description="Лицевой счёт (BAN)", min_length=1, max_length=50)
+    ban: str = Field(..., description="Лицевой счёт (BAN)")
     start_date: str = Field(..., description="Дата начала периода")
     end_date: str = Field(..., description="Дата окончания периода")
 
@@ -119,14 +114,14 @@ class PaymentListPaged(PaymentList):
 
 class AdjustmentList(BaseModel):
     """Модель для получения информации о корректировках."""
-    ban: str = Field(..., description="Лицевой счёт (BAN)", min_length=1, max_length=50)
+    ban: str = Field(..., description="Лицевой счёт (BAN)")
     start_date: str = Field(..., description="Дата начала периода")
     end_date: str = Field(..., description="Дата окончания периода")
 
 
 class GetBillCalls(BaseModel):
     """Модель для получения отчёта по звонкам."""
-    request_id: str = Field(..., description="ID запроса", min_length=1, max_length=100)
+    request_id: str = Field(..., description="ID запроса")
 
 
 class GetBillCallsPaged(GetBillCalls):
@@ -137,7 +132,7 @@ class GetBillCallsPaged(GetBillCalls):
 
 class GetBillCharges(BaseModel):
     """Модель для получения начислений."""
-    request_id: str = Field(..., description="ID запроса", min_length=1, max_length=100)
+    request_id: str = Field(..., description="ID запроса")
 
 
 class GetBillChargesPaged(GetBillCharges):
@@ -148,8 +143,8 @@ class GetBillChargesPaged(GetBillCharges):
 
 class SharedNumber(BaseModel):
     """Базовая модель для shared number операций."""
-    ctn_from: str = Field(..., description="Исходный номер", min_length=10, max_length=15)
-    ctn_to: str = Field(..., description="Целевой номер", min_length=10, max_length=15)
+    ctn_from: str = Field(..., description="Исходный номер")
+    ctn_to: str = Field(..., description="Целевой номер")
 
     @field_validator('ctn_from', 'ctn_to')
     @classmethod
@@ -218,12 +213,12 @@ class PersonalDataUpdate(BaseModel):
 
 class PersonalDataResultRequest(BaseModel):
     """Модель для получения результата обновления персональных данных."""
-    request_id: str = Field(..., description="ID запроса", min_length=1, max_length=100)
+    request_id: str = Field(..., description="ID запроса")
 
 
 class GetDataReportRequest(BaseModel):
     """Модель для получения отчёта данных."""
-    request_id: str = Field(..., description="ID запроса", min_length=1, max_length=100)
+    request_id: str = Field(..., description="ID запроса")
     page: Optional[int] = Field(None, description="Номер страницы", ge=1)
     records_per_page: Optional[str] = Field(None, description="Записей на страницу")
 
@@ -236,7 +231,7 @@ class GetBANInfoListPagedRequest(BaseModel):
 
 class CreateBillRequest(BaseModel):
     """Модель для создания запроса детализации."""
-    ban: str = Field(..., description="Лицевой счёт (BAN)", min_length=1, max_length=50)
+    ban: str = Field(..., description="Лицевой счёт (BAN)")
     bill_date: str = Field(..., description="Дата счёта")
     ctn_list: Optional[str] = Field(None, description="Список номеров")
 
@@ -259,6 +254,6 @@ class CreateDetailsRequest(BaseModel):
 
 class GetDataRequest(BaseModel):
     """Модель для получения данных."""
-    ban: str = Field(..., description="Лицевой счёт (BAN)", min_length=1, max_length=50)
-    hierarchy_id: str = Field(..., description="ID иерархии", min_length=1, max_length=100)
-    subscriber_no: str = Field(..., description="Номер абонента", min_length=1, max_length=50)
+    ban: str = Field(..., description="Лицевой счёт (BAN)")
+    hierarchy_id: str = Field(..., description="ID иерархии")
+    subscriber_no: str = Field(..., description="Номер абонента")
