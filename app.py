@@ -7,15 +7,7 @@ from typing import Optional, Any, List, Dict
 import config.config as config
 from services.logging_config import setup_logging
 from services.token_manager import get_beeline_token, invalidate_token
-from services.pydantic_models import (
-    PutCallForwardRequestEdit, AddDelSoc, SuspendRestoreCTN, ReplaceSim,
-    Details, CTNInfoList, CTNInfoListPaged, ChangePP, SIMList, SIMListPaged,
-    RequestList, ServicesList, ServicesListPaged, PaymentList, PaymentListPaged,
-    AdjustmentList, GetBillCalls, GetBillCallsPaged, GetBillCharges, GetBillChargesPaged,
-    SharedNumberDOL, SharedNumberListDOL, SharedNumberDeleteDOL, PersonalDataUpdate,
-    PersonalDataResultRequest, GetDataReportRequest, GetBANInfoListPagedRequest,
-    CreateBillRequest, CreateDetailsRequest, GetDataRequest
-)
+from services.pydantic_models import *
 from middleware.rate_limiter import RateLimitMiddleware
 
 from client.beeline_soap_client import BeelineSoapClient

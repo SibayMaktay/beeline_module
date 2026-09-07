@@ -7,11 +7,11 @@ import re
 
 class PutCallForwardRequestEdit(BaseModel):
     """Модель для редактирования переадресации."""
-    ctn: str = Field(..., description="Номер абонента", min_length=10, max_length=15)
+    ctn: str = Field(..., description="Номер абонента")
     call_forward_edit_request: list = Field(..., description="Список запросов на редактирование")
     call_forward: list = Field(..., description="Параметры переадресации")
     cf_type: Optional[str] = Field(None, description="Тип переадресации")
-    cf_ctn: Optional[str] = Field(None, description="Номер для переадресации", min_length=10, max_length=15)
+    cf_ctn: Optional[str] = Field(None, description="Номер для переадресации")
     client: Optional[str] = Field(None, description="Код клиента")
 
     @field_validator('ctn', 'cf_ctn')
@@ -26,39 +26,15 @@ class PutCallForwardRequestEdit(BaseModel):
 # SOAP Beeline - Service Management
 # ============================================================================
 
-class AddDelSoc(BaseModel):
-    """Модель для подключения/отключения услуги."""
-    soc: str = Field(..., description="Код услуги (SOC)", min_length=1, max_length=50)
-    inclusion_type: Optional[str] = Field(None, description="Тип включения")
-    eff_date: Optional[str] = Field(None, description="Дата начала действия")
-    exp_date: Optional[str] = Field(None, description="Дата окончания действия")
-
-
 class SuspendRestoreCTN(BaseModel):
     """Модель для блокировки/разблокировки номера."""
-    reason_code: str = Field(..., description="Код причины блокировки")
+    reason_code: str = Field(..., description="Код причины блокировки/разблокировки")
     actv_date: Optional[str] = Field(None, description="Дата активации")
 
 
-class ReplaceSim(BaseModel):
+class ReplaceSIM(BaseModel):
     """Модель для замены SIM-карты."""
     serial_number: str = Field(..., description="Серийный номер SIM-карты")
-
-
-class getDetails(BaseModel):
-    """Модель для получения детализации."""
-    request_id: str = Field(..., description="ID запроса")
-
-
-class getCTNInfoList(BaseModel):
-    """Модель для получения информации об абоненте."""
-    ban: str = Field(..., description="Лицевой счёт (BAN)")
-
-
-class CTNInfoListPaged(getCTNInfoList):
-    """Модель для получения информации об абоненте с пагинацией."""
-    page: Optional[int] = Field(None, description="Номер страницы", ge=1)
-    records_per_page: Optional[str] = Field(None, description="Записей на страницу")
 
 
 class ChangePP(BaseModel):
@@ -68,109 +44,137 @@ class ChangePP(BaseModel):
     free_change: Optional[str] = Field(None, description="Флаг бесплатной смены")
 
 
-class SIMList(BaseModel):
+class AddDelSOC(BaseModel):
+    """Модель для подключения/отключения услуги."""
+    soc: str = Field(..., description="Код услуги (SOC)")
+    inclusion_type: str = Field(..., description="Тип включения")
+    eff_date: Optional[str] = Field(None, description="Дата начала действия")
+    exp_date: Optional[str] = Field(None, description="Дата окончания действия")
+
+
+class GetSIMList(BaseModel):
     """Модель для получения списка SIM-карт."""
     ban: str = Field(..., description="Лицевой счёт (BAN)")
-
-
-class SIMListPaged(SIMList):
+class GetSIMListPaged(GetSIMList):
     """Модель для получения списка SIM-карт с пагинацией."""
-    page: Optional[int] = Field(None, description="Номер страницы", ge=1)
-    records_per_page: Optional[str] = Field(None, description="Записей на страницу")
+    page: Optional[int] = Field(None, description="Номер страницы")
+    records_per_page: Optional[int] = Field(None, description="Записей на страницу")
 
 
-class RequestList(BaseModel):
+class GetRequestList(BaseModel):
     """Модель для получения списка запросов."""
-    page: Optional[int] = Field(None, description="Номер страницы", ge=1)
+    page: Optional[int] = Field(None, description="Номер страницы")
     start_date: Optional[str] = Field(None, description="Дата начала периода")
     end_date: Optional[str] = Field(None, description="Дата окончания периода")
     request_id: Optional[str] = Field(None, description="ID запроса")
-    records_per_page: Optional[str] = Field(None, description="Записей на страницу")
+    records_per_page: Optional[int] = Field(None, description="Записей на страницу")
 
 
-class ServicesList(BaseModel):
+class GetServicesList(BaseModel):
     """Модель для получения списка услуг."""
     ban: str = Field(..., description="Лицевой счёт (BAN)")
-
-
-class ServicesListPaged(ServicesList):
+class GetServicesListPaged(GetServicesList):
     """Модель для получения списка услуг с пагинацией."""
-    page: Optional[int] = Field(None, description="Номер страницы", ge=1)
-    ctn_amount_per_page: Optional[str] = Field(None, description="Количество CTN на страницу")
+    page: Optional[int] = Field(None, description="Номер страницы")
+    ctn_amount_per_page: Optional[int] = Field(None, description="Количество CTN на страницу")
 
 
-class PaymentList(BaseModel):
+class GetCTNInfoList(BaseModel):
+    """Модель для получения информации об абоненте."""
+    ban: str = Field(..., description="Лицевой счёт (BAN)")
+class GetCTNInfoListPaged(GetCTNInfoList):
+    """Модель для получения информации об абоненте с пагинацией."""
+    page: Optional[int] = Field(None, description="Номер страницы")
+    records_per_page: Optional[int] = Field(None, description="Записей на страницу")
+
+
+class GetPaymentList(BaseModel):
     """Модель для получения информации о платежах."""
     ban: str = Field(..., description="Лицевой счёт (BAN)")
     start_date: str = Field(..., description="Дата начала периода")
     end_date: str = Field(..., description="Дата окончания периода")
-
-
-class PaymentListPaged(PaymentList):
+class GetPaymentListPaged(GetPaymentList):
     """Модель для получения информации о платежах с пагинацией."""
-    page: Optional[int] = Field(None, description="Номер страницы", ge=1)
-    records_per_page: Optional[str] = Field(None, description="Записей на страницу")
+    page: Optional[int] = Field(None, description="Номер страницы")
+    records_per_page: Optional[int] = Field(None, description="Записей на страницу")
 
 
-class AdjustmentList(BaseModel):
+class GetAdjustmentList(BaseModel):
     """Модель для получения информации о корректировках."""
     ban: str = Field(..., description="Лицевой счёт (BAN)")
     start_date: str = Field(..., description="Дата начала периода")
     end_date: str = Field(..., description="Дата окончания периода")
 
 
+class CreateBillCallsChargesRequest(BaseModel):
+    """Модель для создания запроса детализации."""
+    ban: str = Field(..., description="Лицевой счёт (BAN)")
+    bill_date: str = Field(..., description="Дата счёта")
+    ctn_list: Optional[str] = Field(None, description="Список номеров")
+
+
 class GetBillCalls(BaseModel):
     """Модель для получения отчёта по звонкам."""
     request_id: str = Field(..., description="ID запроса")
-
-
 class GetBillCallsPaged(GetBillCalls):
     """Модель для получения отчёта по звонкам с пагинацией."""
-    page: Optional[int] = Field(None, description="Номер страницы", ge=1)
-    records_per_page: Optional[str] = Field(None, description="Записей на страницу")
+    page: Optional[int] = Field(None, description="Номер страницы")
+    records_per_page: Optional[int] = Field(None, description="Записей на страницу")
 
 
 class GetBillCharges(BaseModel):
     """Модель для получения начислений."""
     request_id: str = Field(..., description="ID запроса")
-
-
 class GetBillChargesPaged(GetBillCharges):
     """Модель для получения начислений с пагинацией."""
-    page: Optional[int] = Field(None, description="Номер страницы", ge=1)
-    records_per_page: Optional[str] = Field(None, description="Записей на страницу")
+    page: Optional[int] = Field(None, description="Номер страницы")
+    records_per_page: Optional[int] = Field(None, description="Записей на страницу")
+
+
+class GetBANInfoListPaged(BaseModel):
+    """Модель для получения списка BAN с пагинацией."""
+    page: Optional[int] = Field(None, description="Номер страницы")
+    records_per_page: Optional[int] = Field(None, description="Записей на страницу")
+
+
+class CreateDetailsRequest(BaseModel):
+    """Модель для создания запроса на детализацию."""
+    period_start: str = Field(..., description="Дата начала периода")
+    period_end: str = Field(..., description="Дата окончания периода")
+    format_: str = Field(..., alias="format", description="Формат детализации")
+    channel: Optional[str] = Field(None, description="Канал доставки")
+    email: Optional[str] = Field(None, description="Email для доставки")
+
+    @field_validator('email')
+    @classmethod
+    def validate_email(cls, v: str) -> str:
+        if not re.match(r'^[^@]+@[^@]+\.[^@]+$', v):
+            raise ValueError('Некорректный email адрес')
+        return v
+
+
+class GetDetails(BaseModel):
+    """Модель для получение файла детализации (в формате PDF)."""
+    request_id: str = Field(..., description="Номер запроса на отчет")
 
 
 class SharedNumber(BaseModel):
     """Базовая модель для shared number операций."""
-    ctn_from: str = Field(..., description="Исходный номер")
-    ctn_to: str = Field(..., description="Целевой номер")
-
-    @field_validator('ctn_from', 'ctn_to')
-    @classmethod
-    def validate_phone(cls, v: str) -> str:
-        if not re.match(r'^\d{10,15}$', v):
-            raise ValueError('Номер телефона должен содержать 10-15 цифр')
-        return v
-
-
-class SharedNumberDOL(SharedNumber):
+    ctn_from: str = Field(..., description="Основной номер")
+    ctn_to: str = Field(..., description="Дополнительный номер")
+class AddSharedNumberDOL(SharedNumber):
     """Модель для добавления номера в DOL shared list."""
     ctn_type: Optional[str] = Field(None, description="Тип номера")
     soc: Optional[str] = Field(None, description="Код услуги")
     prepaid_state_chk_cancel: Optional[str] = Field(None, description="Флаг проверки prepaid")
     check_add_number_registration: Optional[str] = Field(None, description="Флаг проверки регистрации")
-
-
-class SharedNumberListDOL(SharedNumber):
+class AddSharedNumberListDOL(SharedNumber):
     """Модель для добавления номера в shared list."""
     ctn_to_list: Optional[str] = Field(None, description="Список целевых номеров")
     soc: Optional[str] = Field(None, description="Код услуги")
     prepaid_state_chk_cancel: Optional[str] = Field(None, description="Флаг проверки prepaid")
     check_add_number_registration: Optional[str] = Field(None, description="Флаг проверки регистрации")
-
-
-class SharedNumberDeleteDOL(SharedNumber):
+class DeleteSharedNumberListDOL(SharedNumber):
     """Модель для удаления номера из shared list."""
     ctn_to_list: Optional[str] = Field(None, description="Список целевых номеров")
 
@@ -208,52 +212,52 @@ class PersonalDataUpdate(BaseModel):
     gender: Optional[str] = Field(None, description="Пол")
     taxNumber: Optional[str] = Field(None, description="ИНН")
     snils: Optional[str] = Field(None, description="СНИЛС")
-    # Адресные поля опущены для краткости, но могут быть добавлены аналогично
+    legalPostcode: Optional[str] = Field(None, description="АдрРег Индекс")
+    legalCountryCode: Optional[str] = Field(None, description="АдрРег Код страны")
+    legalRegion: Optional[str] = Field(None, description="АдрРег Регион")
+    legalArea: Optional[str] = Field(None, description="АдрРег Район")
+    legalPlaceType: Optional[str] = Field(None, description="АдрРег Тип НП")
+    legalPlace: Optional[str] = Field(None, description="АдрРег Населенный пункт")
+    legalStreetType: Optional[str] = Field(None, description="АдрРег Тип улицы")
+    legalStreetName: Optional[str] = Field(None, description="АдрРег Улица")
+    legalHouseNo: Optional[str] = Field(None, description="АдрРег Номер дома")
+    legalBuildingType: Optional[str] = Field(None, description="АдрРег Тип строения")
+    legalBuildingNo: Optional[str] = Field(None, description="АдрРег Номер строения")
+    legalApartmentType: Optional[str] = Field(None, description="АдрРег Тип помещения")
+    legalApartmentNo: Optional[str] = Field(None, description="АдрРег Номер помещения")
+    legalAddrComment: Optional[str] = Field(None, description="АдрРег Комментарий")
+    legalFiasId: Optional[str] = Field(None, description="АдрРег ФИАС ИД")
+    actualPostcode: Optional[str] = Field(None, description="АдрПрож Индекс")
+    actualCountryCode: Optional[str] = Field(None, description="АдрПрож Код страны")
+    actualRegion: Optional[str] = Field(None, description="АдрПрож Регион")
+    actualArea: Optional[str] = Field(None, description="АдрПрож Район")
+    actualPlaceType: Optional[str] = Field(None, description="АдрПрож Тип НП")
+    actualPlace: Optional[str] = Field(None, description="АдрПрож Населенный пункт")
+    actualStreetType: Optional[str] = Field(None, description="АдрПрож Тип улицы")
+    actualStreetName: Optional[str] = Field(None, description="АдрПрож Улица")
+    actualHouseNo: Optional[str] = Field(None, description="АдрПрож Номер дома")
+    actualBuildingType: Optional[str] = Field(None, description="АдрПрож Тип строения")
+    actualBuildingNo: Optional[str] = Field(None, description="АдрПрож Номер строения")
+    actualApartmentType: Optional[str] = Field(None, description="АдрПрож Тип помещения")
+    actualApartmentNo: Optional[str] = Field(None, description="АдрПрож Номер помещения")
+    actualAddrComment: Optional[str] = Field(None, description="АдрПрож Комментарий")
+    actualFiasId: Optional[str] = Field(None, description="АдрПрож ФИАС ИД")
 
 
-class PersonalDataResultRequest(BaseModel):
+class PersonalDataResult(BaseModel):
     """Модель для получения результата обновления персональных данных."""
     request_id: str = Field(..., description="ID запроса")
 
 
-class GetDataReportRequest(BaseModel):
-    """Модель для получения отчёта данных."""
-    request_id: str = Field(..., description="ID запроса")
-    page: Optional[int] = Field(None, description="Номер страницы", ge=1)
-    records_per_page: Optional[str] = Field(None, description="Записей на страницу")
-
-
-class GetBANInfoListPagedRequest(BaseModel):
-    """Модель для получения списка BAN с пагинацией."""
-    page: Optional[int] = Field(None, description="Номер страницы", ge=1)
-    records_per_page: Optional[int] = Field(None, description="Записей на страницу", ge=1)
-
-
-class CreateBillRequest(BaseModel):
-    """Модель для создания запроса детализации."""
-    ban: str = Field(..., description="Лицевой счёт (BAN)")
-    bill_date: str = Field(..., description="Дата счёта")
-    ctn_list: Optional[str] = Field(None, description="Список номеров")
-
-
-class CreateDetailsRequest(BaseModel):
-    """Модель для создания запроса на детализацию."""
-    period_start: str = Field(..., description="Дата начала периода")
-    period_end: str = Field(..., description="Дата окончания периода")
-    format_: str = Field(..., alias="format", description="Формат детализации")
-    channel: str = Field(..., description="Канал доставки")
-    email: str = Field(..., description="Email для доставки")
-
-    @field_validator('email')
-    @classmethod
-    def validate_email(cls, v: str) -> str:
-        if not re.match(r'^[^@]+@[^@]+\.[^@]+$', v):
-            raise ValueError('Некорректный email адрес')
-        return v
-
-
-class GetDataRequest(BaseModel):
+class GetData(BaseModel):
     """Модель для получения данных."""
     ban: str = Field(..., description="Лицевой счёт (BAN)")
     hierarchy_id: str = Field(..., description="ID иерархии")
     subscriber_no: str = Field(..., description="Номер абонента")
+
+
+class GetDataReport(BaseModel):
+    """Модель для получения отчёта данных."""
+    request_id: str = Field(..., description="ID запроса")
+    page: Optional[int] = Field(None, description="Номер страницы")
+    records_per_page: Optional[int] = Field(None, description="Записей на страницу")

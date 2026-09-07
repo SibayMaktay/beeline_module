@@ -9,16 +9,7 @@ from pydantic import BaseModel, Field
 
 from client.beeline_soap_client import BeelineSoapClient
 from services.token_manager import get_beeline_token
-from services.pydantic_models import (
-    AddDelSoc, SuspendRestoreCTN, ReplaceSim, Details, CTNInfoList,
-    CTNInfoListPaged, ChangePP, SIMList, SIMListPaged, RequestList,
-    ServicesList, ServicesListPaged, PaymentList, PaymentListPaged,
-    AdjustmentList, GetBillCalls, GetBillCallsPaged, GetBillCharges,
-    GetBillChargesPaged, SharedNumberDOL, SharedNumberListDOL,
-    SharedNumberDeleteDOL, PersonalDataUpdate, PersonalDataResultRequest,
-    GetDataReportRequest, GetBANInfoListPagedRequest, CreateBillRequest,
-    CreateDetailsRequest, GetDataRequest
-)
+from services.pydantic_models import *
 
 logger = logging.getLogger(__name__)
 
@@ -38,161 +29,70 @@ def get_soap_client() -> BeelineSoapClient:
     return BeelineSoapClient(token_provider=token)
 
 
-# ============================================================================
-# Информация об абонентах
-# ============================================================================
 
-@router.post("/getCTNInfoList", summary="Получить информацию об абонентах")
-def get_ctn_info_list_app(
-    request: CTNInfoList,
-    ctn: str = None,
+@router.post("/suspendCTN", summary="Добровольная блокировка номера")
+def suspend_ctn_app(
+    request: SuspendRestoreCTN,
+    ctn: str,
     api_key: str = Depends(verify_api_key),
     beeline_soap: BeelineSoapClient = Depends(get_soap_client),
 ):
     """
-    Получение информации об абонентах по списку номеров (CTN).
+    Добровольная блокировка номера (suspendCTN).
 
     - **ctn**: номер ctn
-    - **ban**: номер ban
+    - **reason_code**: причина блокировки
+    - **actv_date**: дата блокировки
     """
-    result = beeline_soap.get_ctn_info_list(
-        ctn=ctn,
-        ban=request.ban
+    result = beeline_soap.suspend_ctn(
+        ctn,
+        reason_code=request.reason_code,
+        actv_date=request.actv_date
     )
     return {"status": "success", "data": result}
 
-
-@router.post("/getCTNInfoListPaged", summary="Получить информацию об абонентах (пагинация)")
-def get_ctn_info_list_paged_app(
-    request: CTNInfoListPaged,
-    ctn: str = None,
+@router.post("/restoreCTN", summary="Разблокировка номера")
+def restore_ctn_app(
+    request: SuspendRestoreCTN,
+    ctn: str,
     api_key: str = Depends(verify_api_key),
     beeline_soap: BeelineSoapClient = Depends(get_soap_client),
 ):
     """
-    Получение информации об абонентах с пагинацией.
+    Разблокировка номера (restore).
 
     - **ctn**: номер ctn
-    - **ban**: номер ban
-    - **page**: Номер страницы
-    - **records_per_page**: Размер страницы
+    - **reason_code**: причина разблокировки
+    - **actv_date**: дата разблокировки
     """
-    result = beeline_soap.get_ctn_info_list_paged(
+    result = beeline_soap.restore_ctn(
         ctn,
-        ban=request.ban,
-        page=request.page,
-        records_per_page=request.records_per_page
+        reason_code=request.reason_code,
+        actv_date=request.actv_date
     )
     return {"status": "success", "data": result}
 
 
-# ============================================================================
-# Платежи и балансы
-# ============================================================================
 
-@router.post("/getPaymentList", summary="Получить список платежей")
-def get_payment_list_app(
-    request: PaymentList,
-    ctn: str = None,
-    api_key: str = Depends(verify_api_key),
-    beeline_soap: BeelineSoapClient = Depends(get_soap_client),
-):
-    """
-    Получение списка платежей за указанный период.
-
-    - **contractNumber**: Номер контракта
-    - **dateFrom**: Дата начала периода (YYYY-MM-DD)
-    - **dateTo**: Дата окончания периода (YYYY-MM-DD)
-    """
-    result = beeline_soap.get_payment_list(
-        ctn=ctn,
-        ban=request.ban,
-        start_date=request.start_date,
-        end_date=request.end_date
-    )
-    return {"status": "success", "data": result}
-
-
-@router.post("/getPaymentListPaged", summary="Получить список платежей (пагинация)")
-def get_payment_list_paged_app(
-    request: PaymentListPaged,
-    ctn: str = None,
-    api_key: str = Depends(verify_api_key),
-    beeline_soap: BeelineSoapClient = Depends(get_soap_client),
-):
-    """
-    Получение списка платежей с пагинацией.
-    """
-    result = beeline_soap.get_payment_list_paged(
-        ctn=ctn,
-        ban=request.ban,
-        start_date=request.start_date,
-        end_date=request.end_date,
-        page=request.page,
-        records_per_page=request.records_per_page
-    )
-    return {"status": "success", "data": result}
-
-
-@router.post("/getUnbilledBalance", summary="Получить небиллингованный баланс")
-def get_unbilled_balance_app(
-    request: CTNInfoList,
+@router.post("/replaceSIM", summary="Замена SIM-карты")
+def replace_sim_app(
+    request: ReplaceSIM,
     ctn: str,
     api_key: str = Depends(verify_api_key),
     beeline_soap: BeelineSoapClient = Depends(get_soap_client),
 ):
     """
-    Получение небиллингованного баланса по номеру контракта.
+    Замена SIM-карты.
+
+    - **ctn**: номер ctn
+    - **serial_number**: Новый ICCID SIM-карты
     """
-    result = beeline_soap.get_unbilled_balance(
-        ctn=ctn
-    )
-    return {"status": "success", "data": result}
-
-
-@router.post("/getUnbilledCallsList", summary="Получения информации о необилленных звонках абонента")
-def get_unbilled_calls_list_app(
-    request: getUnbilledCallsList,
-    ctn: str,
-    api_key: str = Depends(verify_api_key),
-    beeline_soap: BeelineSoapClient = Depends(get_soap_client),
-):
-    """
-    Получение небиллингованного баланса по номеру контракта.
-    """
-    result = beeline_soap.get_unbilled_balance(
-        ctn=ctn
-    )
-    return {"status": "success", "data": result}
-
-
-# ============================================================================
-# Услуги и тарифы
-# ============================================================================
-
-@router.post("/addDelSOC", summary="Подключить/отключить услугу")
-def add_del_soc_app(
-    request: AddDelSoc,
-    ctn: str,
-    api_key: str = Depends(verify_api_key),
-    beeline_soap: BeelineSoapClient = Depends(get_soap_client),
-):
-    """
-    Подключение или отключение услуг (SOC).
-
-    - **contractNumber**: Номер контракта
-    - **action**: Действие ('ADD' или 'DEL')
-    - **socCode**: Код услуги
-    - **params**: Параметры услуги (опционально)
-    """
-    result = beeline_soap.add_del_soc(
+    result = beeline_soap.replace_sim(
         ctn,
-        soc=request.soc,
-        inclusion_type=request.inclusion_type,
-        eff_date=request.eff_date,
-        exp_date=request.exp_date
+        serial_number=request.serial_number,
     )
     return {"status": "success", "data": result}
+
 
 
 @router.post("/changePP", summary="Сменить тарифный план")
@@ -218,118 +118,35 @@ def change_pp_app(
     )
     return {"status": "success", "data": result}
 
-
-@router.post("/getServicesList", summary="Получить список услуг")
-def get_services_list_app(
-    request: ServicesList,
-    ctn: str = None,
-    api_key: str = Depends(verify_api_key),
-    beeline_soap: BeelineSoapClient = Depends(get_soap_client),
-):
-    """
-    Получение списка активных услуг абонента.
-    """
-    result = beeline_soap.get_services_list(
-        ctn=ctn,
-        ban=request.ban
-    )
-    return {"status": "success", "data": result}
-
-
-@router.post("/getServicesListPaged", summary="Получить список услуг (пагинация)")
-def get_services_list_paged_app(
-    request: ServicesListPaged,
-    ctn: str = None,
-    api_key: str = Depends(verify_api_key),
-    beeline_soap: BeelineSoapClient = Depends(get_soap_client),
-):
-    """
-    Получение списка услуг с пагинацией.
-    """
-    result = beeline_soap.get_services_list_paged(
-        ctn=ctn,
-        ban=request,
-        page=request.page,
-        ctn_amount_per_page=request.ctn_amount_per_page
-    )
-    return {"status": "success", "data": result}
-
-
-# ============================================================================
-# Блокировки
-# ============================================================================
-
-@router.post("/suspendCTN", summary="Добровольная блокировка номера")
-def suspend_ctn_app(
-    request: SuspendRestoreCTN,
+@router.post("/addDelSOC", summary="Подключить/отключить услугу")
+def add_del_soc_app(
+    request: AddDelSOC,
     ctn: str,
     api_key: str = Depends(verify_api_key),
     beeline_soap: BeelineSoapClient = Depends(get_soap_client),
 ):
     """
-    Добровольная блокировка номера (suspend).
+    Подключение или отключение услуг (SOC).
 
-    - **ctn**: номер ctn
-    - **reason_code**: причина блокировки
-    - **actv_date**: дата блокировки
+    - **contractNumber**: Номер контракта
+    - **action**: Действие ('ADD' или 'DEL')
+    - **socCode**: Код услуги
+    - **params**: Параметры услуги (опционально)
     """
-    result = beeline_soap.suspend_ctn(
+    result = beeline_soap.add_del_soc(
         ctn,
-        reason_code=request.reason_code,
-        actv_date=request.actv_date
+        soc=request.soc,
+        inclusion_type=request.inclusion_type,
+        eff_date=request.eff_date,
+        exp_date=request.exp_date
     )
     return {"status": "success", "data": result}
 
-
-@router.post("/restoreCTN", summary="Разблокировка номера")
-def restore_ctn_app(
-    request: SuspendRestoreCTN,
-    ctn: str,
-    api_key: str = Depends(verify_api_key),
-    beeline_soap: BeelineSoapClient = Depends(get_soap_client),
-):
-    """
-    Разблокировка номера (restore).
-
-    - **ctn**: номер ctn
-    - **reason_code**: причина разблокировки
-    - **actv_date**: дата разблокировки
-    """
-    result = beeline_soap.restore_ctn(
-        ctn,
-        reason_code=request.reason_code,
-        actv_date=request.actv_date
-    )
-    return {"status": "success", "data": result}
-
-
-# ============================================================================
-# SIM-карты
-# ============================================================================
-
-@router.post("/replaceSIM", summary="Замена SIM-карты")
-def replace_sim_app(
-    request: ReplaceSim,
-    ctn: str,
-    api_key: str = Depends(verify_api_key),
-    beeline_soap: BeelineSoapClient = Depends(get_soap_client),
-):
-    """
-    Замена SIM-карты.
-
-    - **ctn**: номер ctn
-    - **serial_number**: Новый ICCID SIM-карты
-    """
-    result = beeline_soap.replace_sim(
-        ctn,
-        serial_number=request.serial_number,
-    )
-    return {"status": "success", "data": result}
 
 
 @router.post("/getSIMList", summary="Получить список SIM-карт")
 def get_sim_list_app(
-    request: SIMList,
+    request: GetSIMList,
     ctn: str = None,
     api_key: str = Depends(verify_api_key),
     beeline_soap: BeelineSoapClient = Depends(get_soap_client),
@@ -343,10 +160,9 @@ def get_sim_list_app(
     )
     return {"status": "success", "data": result}
 
-
 @router.post("/getSIMListPaged", summary="Получить список SIM-карт (пагинация)")
 def get_sim_list_paged_app(
-    request: SIMListPaged,
+    request: GetSIMListPaged,
     ctn: str = None,
     api_key: str = Depends(verify_api_key),
     beeline_soap: BeelineSoapClient = Depends(get_soap_client),
@@ -363,32 +179,10 @@ def get_sim_list_paged_app(
     return {"status": "success", "data": result}
 
 
-# ============================================================================
-# Детализация звонков
-# ============================================================================
-
-@router.post("/getDetails", summary="Получить детализацию звонков")
-def get_details_app(
-    request: Details,
-    api_key: str = Depends(verify_api_key),
-    beeline_soap: BeelineSoapClient = Depends(get_soap_client),
-):
-    """
-    Получение детализации звонков за период.
-
-    - **contractNumber**: Номер контракта
-    - **month**: Месяц в формате YYYY-MM
-    """
-    result = beeline_soap.get_details(
-        contract_number=request.contractNumber,
-        month=request.month
-    )
-    return {"status": "success", "data": result}
-
 
 @router.post("/getRequestList", summary="Получить список запросов")
 def get_request_list_app(
-    request: RequestList,
+    request: GetRequestList,
     api_key: str = Depends(verify_api_key),
     beeline_soap: BeelineSoapClient = Depends(get_soap_client),
 ):
@@ -403,6 +197,211 @@ def get_request_list_app(
         records_per_page=request.records_per_page
     )
     return {"status": "success", "data": result}
+
+
+
+@router.post("/getServicesList", summary="Получить список услуг")
+def get_services_list_app(
+    request: GetServicesList,
+    ctn: str = None,
+    api_key: str = Depends(verify_api_key),
+    beeline_soap: BeelineSoapClient = Depends(get_soap_client),
+):
+    """
+    Получение списка активных услуг абонента.
+    """
+    result = beeline_soap.get_services_list(
+        ctn=ctn,
+        ban=request.ban
+    )
+    return {"status": "success", "data": result}
+
+@router.post("/getServicesListPaged", summary="Получить список услуг (пагинация)")
+def get_services_list_paged_app(
+    request: GetServicesListPaged,
+    ctn: str = None,
+    api_key: str = Depends(verify_api_key),
+    beeline_soap: BeelineSoapClient = Depends(get_soap_client),
+):
+    """
+    Получение списка услуг с пагинацией.
+    """
+    result = beeline_soap.get_services_list_paged(
+        ctn=ctn,
+        ban=request,
+        page=request.page,
+        ctn_amount_per_page=request.ctn_amount_per_page
+    )
+    return {"status": "success", "data": result}
+
+
+
+@router.post("/getCTNInfoList", summary="Получить информацию об абонентах")
+def get_ctn_info_list_app(
+    request: GetCTNInfoList,
+    ctn: str = None,
+    api_key: str = Depends(verify_api_key),
+    beeline_soap: BeelineSoapClient = Depends(get_soap_client),
+):
+    """
+    Получение информации об абонентах по списку номеров (CTN).
+
+    - **ctn**: номер ctn
+    - **ban**: номер ban
+    """
+    result = beeline_soap.get_ctn_info_list(
+        ctn=ctn,
+        ban=request.ban
+    )
+    return {"status": "success", "data": result}
+
+@router.post("/getCTNInfoListPaged", summary="Получить информацию об абонентах (пагинация)")
+def get_ctn_info_list_paged_app(
+    request: GetCTNInfoListPaged,
+    ctn: str = None,
+    api_key: str = Depends(verify_api_key),
+    beeline_soap: BeelineSoapClient = Depends(get_soap_client),
+):
+    """
+    Получение информации об абонентах с пагинацией.
+
+    - **ctn**: номер ctn
+    - **ban**: номер ban
+    - **page**: Номер страницы
+    - **records_per_page**: Размер страницы
+    """
+    result = beeline_soap.get_ctn_info_list_paged(
+        ctn,
+        ban=request.ban,
+        page=request.page,
+        records_per_page=request.records_per_page
+    )
+    return {"status": "success", "data": result}
+
+
+
+@router.post("/getPaymentList", summary="Получить список платежей")
+def get_payment_list_app(
+    request: GetPaymentList,
+    ctn: str = None,
+    api_key: str = Depends(verify_api_key),
+    beeline_soap: BeelineSoapClient = Depends(get_soap_client),
+):
+    """
+    Получение списка платежей за указанный период.
+
+    - **contractNumber**: Номер контракта
+    - **dateFrom**: Дата начала периода (YYYY-MM-DD)
+    - **dateTo**: Дата окончания периода (YYYY-MM-DD)
+    """
+    result = beeline_soap.get_payment_list(
+        ctn=ctn,
+        ban=request.ban,
+        start_date=request.start_date,
+        end_date=request.end_date
+    )
+    return {"status": "success", "data": result}
+
+@router.post("/getPaymentListPaged", summary="Получить список платежей (пагинация)")
+def get_payment_list_paged_app(
+    request: GetPaymentListPaged,
+    ctn: str = None,
+    api_key: str = Depends(verify_api_key),
+    beeline_soap: BeelineSoapClient = Depends(get_soap_client),
+):
+    """
+    Получение списка платежей с пагинацией.
+    """
+    result = beeline_soap.get_payment_list_paged(
+        ctn=ctn,
+        ban=request.ban,
+        start_date=request.start_date,
+        end_date=request.end_date,
+        page=request.page,
+        records_per_page=request.records_per_page
+    )
+    return {"status": "success", "data": result}
+
+@router.post("/getUnbilledBalance", summary="Получить небиллингованный баланс")
+def get_unbilled_balance_app(
+    ctn: str,
+    api_key: str = Depends(verify_api_key),
+    beeline_soap: BeelineSoapClient = Depends(get_soap_client),
+):
+    """
+    Получение небиллингованного баланса по номеру контракта.
+    """
+    result = beeline_soap.get_unbilled_balance(
+        ctn=ctn
+    )
+    return {"status": "success", "data": result}
+
+@router.post("/getUnbilledCallsList", summary="Получения информации о необилленных звонках абонента")
+def get_unbilled_calls_list_app(
+    ctn: str,
+    api_key: str = Depends(verify_api_key),
+    beeline_soap: BeelineSoapClient = Depends(get_soap_client),
+):
+    """
+    Получение небиллингованного баланса по номеру контракта.
+    """
+    result = beeline_soap.get_unbilled_balance(
+        ctn=ctn
+    )
+    return {"status": "success", "data": result}
+
+
+
+@router.post("/getAdjustmentList", summary="Получить список корректировок")
+def get_adjustment_list_app(
+    request: GetAdjustmentList,
+    api_key: str = Depends(verify_api_key),
+    beeline_soap: BeelineSoapClient = Depends(get_soap_client),
+):
+    """
+    Получение списка корректировок за период.
+    """
+    result = beeline_soap.get_adjustment_list(
+        contract_number=request.contractNumber,
+        date_from=request.dateFrom,
+        date_to=request.dateTo
+    )
+    return {"status": "success", "data": result}
+
+
+
+@router.post("/createBillCallsRequest", summary="Создать счет")
+def create_bill_calls_request_app(
+    request: CreateBillCallsChargesRequest,
+    api_key: str = Depends(verify_api_key),
+    beeline_soap: BeelineSoapClient = Depends(get_soap_client),
+):
+    """
+    Создание счета для абонента.
+    """
+    result = beeline_soap.create_bill_calls_request(
+        contract_number=request.contractNumber,
+        amount=request.amount,
+        description=request.description
+    )
+    return {"status": "success", "data": result}
+
+@router.post("/createBillChargesRequest", summary="Создать счет")
+def create_bill_charges_request_app(
+    request: CreateBillCallsChargesRequest,
+    api_key: str = Depends(verify_api_key),
+    beeline_soap: BeelineSoapClient = Depends(get_soap_client),
+):
+    """
+    Создание счета для абонента.
+    """
+    result = beeline_soap.create_bill_charges_request(
+        contract_number=request.contractNumber,
+        amount=request.amount,
+        description=request.description
+    )
+    return {"status": "success", "data": result}
+
 
 
 @router.post("/getBillCalls", summary="Получить биллинг звонков")
@@ -420,7 +419,6 @@ def get_bill_calls_app(
         date_to=request.dateTo
     )
     return {"status": "success", "data": result}
-
 
 @router.post("/getBillCallsPaged", summary="Получить биллинг звонков (пагинация)")
 def get_bill_calls_paged_app(
@@ -441,6 +439,7 @@ def get_bill_calls_paged_app(
     return {"status": "success", "data": result}
 
 
+
 @router.post("/getBillCharges", summary="Получить биллинг списаний")
 def get_bill_charges_app(
     request: GetBillCharges,
@@ -456,7 +455,6 @@ def get_bill_charges_app(
         date_to=request.dateTo
     )
     return {"status": "success", "data": result}
-
 
 @router.post("/getBillChargesPaged", summary="Получить биллинг списаний (пагинация)")
 def get_bill_charges_paged_app(
@@ -477,108 +475,6 @@ def get_bill_charges_paged_app(
     return {"status": "success", "data": result}
 
 
-@router.post("/getAdjustmentList", summary="Получить список корректировок")
-def get_adjustment_list_app(
-    request: AdjustmentList,
-    api_key: str = Depends(verify_api_key),
-    beeline_soap: BeelineSoapClient = Depends(get_soap_client),
-):
-    """
-    Получение списка корректировок за период.
-    """
-    result = beeline_soap.get_adjustment_list(
-        contract_number=request.contractNumber,
-        date_from=request.dateFrom,
-        date_to=request.dateTo
-    )
-    return {"status": "success", "data": result}
-
-
-# ============================================================================
-# Общие номера (Shared Number)
-# ============================================================================
-
-@router.post("/addSharedNumberListDOL", summary="Добавить общие номера")
-def add_shared_number_list_dol_app(
-    request: SharedNumberListDOL,
-    api_key: str = Depends(verify_api_key),
-    beeline_soap: BeelineSoapClient = Depends(get_soap_client),
-):
-    """
-    Добавление списка общих номеров (DoL).
-    """
-    result = beeline_soap.add_shared_number_list_dol(
-        contract_number=request.contractNumber,
-        shared_numbers=request.sharedNumbers
-    )
-    return {"status": "success", "data": result}
-
-
-@router.post("/deleteSharedNumberListDOL", summary="Удалить общие номера")
-def delete_shared_number_list_dol_app(
-    request: SharedNumberDeleteDOL,
-    api_key: str = Depends(verify_api_key),
-    beeline_soap: BeelineSoapClient = Depends(get_soap_client),
-):
-    """
-    Удаление списка общих номеров (DoL).
-    """
-    result = beeline_soap.delete_shared_number_list_dol(
-        contract_number=request.contractNumber,
-        shared_numbers=request.sharedNumbers
-    )
-    return {"status": "success", "data": result}
-
-
-# ============================================================================
-# Персональные данные
-# ============================================================================
-
-@router.post("/personalDataUpdate", summary="Обновить персональные данные")
-def personal_data_update_app(
-    request: PersonalDataUpdate,
-    api_key: str = Depends(verify_api_key),
-    beeline_soap: BeelineSoapClient = Depends(get_soap_client),
-):
-    """
-    Обновление персональных данных абонента.
-    """
-    result = beeline_soap.personal_data_update(
-        contract_number=request.contractNumber,
-        data=request.data
-    )
-    return {"status": "success", "data": result}
-
-
-@router.post("/personalDataResult", summary="Получить результат обновления данных")
-def personal_data_result_app(
-    request: PersonalDataResultRequest,
-    api_key: str = Depends(verify_api_key),
-    beeline_soap: BeelineSoapClient = Depends(get_soap_client),
-):
-    """
-    Получение результата обновления персональных данных.
-    """
-    result = beeline_soap.personal_data_result(request_id=request.requestId)
-    return {"status": "success", "data": result}
-
-
-@router.post("/getDataReport", summary="Получить отчет по данным")
-def get_data_report_app(
-    request: GetDataReportRequest,
-    api_key: str = Depends(verify_api_key),
-    beeline_soap: BeelineSoapClient = Depends(get_soap_client),
-):
-    """
-    Получение отчета по данным.
-    """
-    result = beeline_soap.get_data_report(report_id=request.reportId)
-    return {"status": "success", "data": result}
-
-
-# ============================================================================
-# BAN (Business Account Number)
-# ============================================================================
 
 @router.post("/getBANInfoList", summary="Получить информацию о BAN")
 def get_ban_info_list_app(
@@ -593,7 +489,7 @@ def get_ban_info_list_app(
 
 @router.post("/getBANInfoListPaged", summary="Получить информацию о BAN (пагинация)")
 def get_ban_info_list_paged_app(
-    request: GetBANInfoListPagedRequest,
+    request: GetBANInfoListPaged,
     api_key: str = Depends(verify_api_key),
     beeline_soap: BeelineSoapClient = Depends(get_soap_client),
 ):
@@ -606,26 +502,6 @@ def get_ban_info_list_paged_app(
     )
     return {"status": "success", "data": result}
 
-
-# ============================================================================
-# Биллинг (создание счетов)
-# ============================================================================
-
-@router.post("/createBill", summary="Создать счет")
-def create_bill_app(
-    request: CreateBillRequest,
-    api_key: str = Depends(verify_api_key),
-    beeline_soap: BeelineSoapClient = Depends(get_soap_client),
-):
-    """
-    Создание счета для абонента.
-    """
-    result = beeline_soap.create_bill(
-        contract_number=request.contractNumber,
-        amount=request.amount,
-        description=request.description
-    )
-    return {"status": "success", "data": result}
 
 
 @router.post("/createDetails", summary="Создать запрос на детализацию")
@@ -645,9 +521,107 @@ def create_details_app(
     return {"status": "success", "data": result}
 
 
+
+@router.post("/getDetails", summary="Получить детализацию звонков")
+def get_details_app(
+    request: GetDetails,
+    api_key: str = Depends(verify_api_key),
+    beeline_soap: BeelineSoapClient = Depends(get_soap_client),
+):
+    """
+    Получение детализации звонков за период.
+
+    - **contractNumber**: Номер контракта
+    - **month**: Месяц в формате YYYY-MM
+    """
+    result = beeline_soap.get_details(
+        contract_number=request.contractNumber,
+        month=request.month
+    )
+    return {"status": "success", "data": result}
+
+
+
+@router.post("/addSharedNumberDOL", summary="Добавить общие номера")
+def add_shared_number_dol_app(
+    request: AddSharedNumberDOL,
+    api_key: str = Depends(verify_api_key),
+    beeline_soap: BeelineSoapClient = Depends(get_soap_client),
+):
+    """
+    Добавление списка общих номеров (DoL).
+    """
+    result = beeline_soap.add_shared_number_list_dol(
+        contract_number=request.contractNumber,
+        shared_numbers=request.sharedNumbers
+    )
+    return {"status": "success", "data": result}
+
+@router.post("/addSharedNumberListDOL", summary="Добавить общие номера")
+def add_shared_number_list_dol_app(
+    request: AddSharedNumberListDOL,
+    api_key: str = Depends(verify_api_key),
+    beeline_soap: BeelineSoapClient = Depends(get_soap_client),
+):
+    """
+    Добавление списка общих номеров (DoL).
+    """
+    result = beeline_soap.add_shared_number_list_dol(
+        contract_number=request.contractNumber,
+        shared_numbers=request.sharedNumbers
+    )
+    return {"status": "success", "data": result}
+
+@router.post("/deleteSharedNumberListDOL", summary="Удалить общие номера")
+def delete_shared_number_list_dol_app(
+    request: DeleteSharedNumberListDOL,
+    api_key: str = Depends(verify_api_key),
+    beeline_soap: BeelineSoapClient = Depends(get_soap_client),
+):
+    """
+    Удаление списка общих номеров (DoL).
+    """
+    result = beeline_soap.delete_shared_number_list_dol(
+        contract_number=request.contractNumber,
+        shared_numbers=request.sharedNumbers
+    )
+    return {"status": "success", "data": result}
+
+
+
+@router.post("/personalDataUpdate", summary="Обновить персональные данные")
+def personal_data_update_app(
+    request: PersonalDataUpdate,
+    api_key: str = Depends(verify_api_key),
+    beeline_soap: BeelineSoapClient = Depends(get_soap_client),
+):
+    """
+    Обновление персональных данных абонента.
+    """
+    result = beeline_soap.personal_data_update(
+        contract_number=request.contractNumber,
+        data=request.data
+    )
+    return {"status": "success", "data": result}
+
+
+@router.post("/personalDataResult", summary="Получить результат обновления данных")
+def personal_data_result_app(
+    request: PersonalDataResult,
+    api_key: str = Depends(verify_api_key),
+    beeline_soap: BeelineSoapClient = Depends(get_soap_client),
+):
+    """
+    Получение результата обновления персональных данных.
+    """
+    result = beeline_soap.personal_data_result(request_id=request.requestId)
+    return {"status": "success", "data": result}
+
+
+
 @router.post("/getData", summary="Получить данные")
 def get_data_app(
-    request: GetDataRequest,
+    request: GetData,
     api_key: str = Depends(verify_api_key),
     beeline_soap: BeelineSoapClient = Depends(get_soap_client),
 ):
@@ -658,10 +632,15 @@ def get_data_app(
     return {"status": "success", "data": result}
 
 
-# ============================================================================
-# Вспомогательные модели
-# ============================================================================
 
-class ContractNumberRequest(BaseModel):
-    """Базовый запрос с номером контракта"""
-    contractNumber: str = Field(..., description="Номер контракта", example="79001234567")
+@router.post("/getDataReport", summary="Получить отчет по данным")
+def get_data_report_app(
+    request: GetDataReport,
+    api_key: str = Depends(verify_api_key),
+    beeline_soap: BeelineSoapClient = Depends(get_soap_client),
+):
+    """
+    Получение отчета по данным.
+    """
+    result = beeline_soap.get_data_report(report_id=request.reportId)
+    return {"status": "success", "data": result}

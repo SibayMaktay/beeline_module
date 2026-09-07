@@ -63,170 +63,6 @@ class BeelineSoapClient:
     def __init__(self, token_provider):
         self.token_provider = token_provider
 
-    def get_ctn_info_list(
-        self,
-        ban: str,
-        ctn: str = None
-    ) -> Optional[Any]:
-        """
-        Получения информации об абонентах на уровне BAN/CTN.
-        """
-        session_id = self.token_provider # get_beeline_token()
-        xml = get_ctn_info_list_template(
-            ban=ban,
-            session_id=session_id,
-            ctn=ctn,
-            login=config.beeline_login
-        )
-        return _make_soap_request(
-            xml,
-            "urn:uss-wsapi:Subscriber:SubscriberInterface:getCTNInfoListRequest"
-        )
-
-    def get_ctn_info_list_paged(
-        self,
-        ban: str,
-        ctn: str = None,
-        page: int = None,
-        records_per_page: str = None
-    ) -> Optional[Any]:
-        """
-        Получения информации об абонентах на уровне BAN/CTN.
-        """
-        session_id = self.token_provider
-        xml = get_ctn_info_list_paged_template(
-            ban=ban,
-            session_id=session_id,
-            ctn=ctn,
-            page=page,
-            records_per_page=records_per_page,
-            login=config.beeline_login
-        )
-        return _make_soap_request(
-            xml,
-            "urn:uss-wsapi:Subscriber:SubscriberInterface:getCTNInfoListRequest"
-        )
-
-    def get_payment_list(
-        self,
-        ban: str,
-        start_date: str,
-        end_date: str,
-        ctn: str
-    ) -> Optional[Any]:
-        """
-        Получение списка платежей.
-        """
-        session_id = self.token_provider
-        xml = get_payment_list_template(
-            ban=ban,
-            start_date=start_date,
-            end_date=end_date,
-            ctn=ctn,
-            session_id=session_id,
-            login=config.beeline_login
-        )
-        return _make_soap_request(
-            xml,
-            "urn:uss-wsapi:Subscriber:SubscriberInterface:getPaymentListRequest"
-        )
-
-    def get_payment_list_paged(
-        self,
-        ban: str,
-        start_date: str,
-        end_date: str,
-        ctn: str,
-        page: int = None,
-        records_per_page: str = None
-    ) -> Optional[Any]:
-        """
-        Получение списка платежей.
-        """
-        session_id = self.token_provider
-        xml = get_payment_list_paged_template(
-            ban=ban,
-            start_date=start_date,
-            end_date=end_date,
-            ctn=ctn,
-            session_id=session_id,
-            login=config.beeline_login,
-            page=page,
-            records_per_page=records_per_page
-        )
-        return _make_soap_request(
-            xml,
-            "urn:uss-wsapi:Subscriber:SubscriberInterface:getPaymentListRequest"
-        )
-
-    def change_pp(
-        self,
-        ctn: str,
-        price_plan: str,
-        future_date: str = None,
-        free_change: str = None
-    ) -> Optional[Any]:
-        """
-        Смена тарифного плана.
-        """
-        session_id = self.token_provider
-        xml = change_pp_template(
-            ctn=ctn,
-            price_plan=price_plan,
-            session_id=session_id,
-            future_date=future_date,
-            free_change=free_change,
-            login=config.beeline_login
-        )
-        return _make_soap_request(
-            xml,
-            "urn:uss-wsapi:Subscriber:SubscriberInterface:changePPRequest"
-        )
-
-    def get_unbilled_balance(
-        self,
-        ctn: str
-    ) -> Optional[Any]:
-        """
-        Небиллингованный баланс лицевого счёта (getUnbilledBalances).
-        """
-        session_id = self.token_provider
-        xml = get_unbilled_balance_template(
-            ctn=ctn,
-            session_id=session_id,
-            login=config.beeline_login
-        )
-        return _make_soap_request(
-            xml,
-            "urn:uss-wsapi:Subscriber:SubscriberInterface:getUnbilledBalancesRequest"
-        )
-
-    def add_del_soc(
-        self,
-        ctn: str,
-        soc: str,
-        inclusion_type: str,
-        eff_date: str = None,
-        exp_date: str = None
-    ) -> Optional[Any]:
-        """
-        Подключение/отключение услуги (addDelSOC). add=True — подключить, False — отключить.
-        """
-        session_id = self.token_provider
-        xml = add_del_soc_template(
-            ctn=ctn,
-            soc=soc,
-            inclusion_type=inclusion_type,
-            eff_date=eff_date,
-            exp_date=exp_date,
-            session_id=session_id,
-            login=config.beeline_login
-        )
-        return _make_soap_request(
-            xml,
-            "urn:uss-wsapi:Subscriber:SubscriberInterface:addDelSOCRequest"
-        )
-
     def suspend_ctn(
         self,
         ctn: str,
@@ -291,132 +127,54 @@ class BeelineSoapClient:
             "urn:uss-wsapi:Subscriber:SubscriberInterface:replaceSIMRequest"
         )
 
-    def get_details(
+    def change_pp(
         self,
-        request_id: str
-    ) -> Optional[Any]:
-        session_id = self.token_provider
-        xml = get_details_template(
-            session_id=session_id,
-            request_id=request_id,
-            login=config.beeline_login
-        )
-        return _make_soap_request(
-            xml,
-            "urn:uss-wsapi:Subscriber:SubscriberInterface:getDetailsRequest"
-        )
-
-    def get_request_list(
-        self,
-        page: int = None,
-        start_date: str = None,
-        end_date: str = None,
-        request_id: str = None,
-        records_per_page: str = None
-    ) -> Optional[Any]:
-        session_id = self.token_provider
-        xml = get_request_list_template(
-            session_id=session_id,
-            page=page,
-            login=config.beeline_login,
-            start_date=start_date,
-            end_date=end_date,
-            request_id=request_id,
-            records_per_page=records_per_page
-        )
-        return _make_soap_request(
-            xml,
-            "urn:uss-wsapi:Subscriber:SubscriberInterface:getRequestListRequest"
-        )
-
-    def get_bill_calls(
-        self,
-        request_id: str
-    ) -> Optional[Any]:
-        session_id = self.token_provider
-        xml = get_bill_calls_template(
-            session_id=session_id,
-            request_id=request_id,
-            login=config.beeline_login
-        )
-        return _make_soap_request(
-            xml,
-            "urn:uss-wsapi:Subscriber:SubscriberInterface:getBillCallsRequest"
-        )
-
-    def get_bill_calls_paged(
-        self,
-        request_id: str,
-        page: int = None,
-        records_per_page: str = None
+        ctn: str,
+        price_plan: str,
+        future_date: str = None,
+        free_change: str = None
     ) -> Optional[Any]:
         """
-        Получить звонки с пагинацией.
+        Смена тарифного плана.
         """
         session_id = self.token_provider
-        xml = get_bill_calls_paged_template(
+        xml = change_pp_template(
+            ctn=ctn,
+            price_plan=price_plan,
             session_id=session_id,
-            request_id=request_id,
-            page=page,
-            login=config.beeline_login,
-            records_per_page=records_per_page
-        )
-        return _make_soap_request(
-            xml,
-            "urn:uss-wsapi:Subscriber:SubscriberInterface:getBillCallsPagedRequest"
-        )
-
-    def get_adjustment_list(
-        self,
-        ban: str,
-        start_date: str,
-        end_date: str
-    ) -> Optional[Any]:
-        session_id = self.token_provider
-        xml = get_adjustment_list_template(
-            session_id=session_id,
-            ban=ban,
-            start_date=start_date,
-            end_date=end_date,
+            future_date=future_date,
+            free_change=free_change,
             login=config.beeline_login
         )
         return _make_soap_request(
             xml,
-            "urn:uss-wsapi:Subscriber:SubscriberInterface:getAdjustmentListRequest"
+            "urn:uss-wsapi:Subscriber:SubscriberInterface:changePPRequest"
         )
 
-    def get_bill_charges(
+    def add_del_soc(
         self,
-        request_id: str
+        ctn: str,
+        soc: str,
+        inclusion_type: str,
+        eff_date: str = None,
+        exp_date: str = None
     ) -> Optional[Any]:
+        """
+        Подключение/отключение услуги (addDelSOC). add=True — подключить, False — отключить.
+        """
         session_id = self.token_provider
-        xml = get_bill_charges_template(
+        xml = add_del_soc_template(
+            ctn=ctn,
+            soc=soc,
+            inclusion_type=inclusion_type,
+            eff_date=eff_date,
+            exp_date=exp_date,
             session_id=session_id,
-            request_id=request_id,
             login=config.beeline_login
         )
         return _make_soap_request(
             xml,
-            "urn:uss-wsapi:Subscriber:SubscriberInterface:getBillChargesRequest"
-        )
-
-    def get_bill_charges_paged(
-        self,
-        request_id: str,
-        page: int = None,
-        records_per_page: str = None
-    ) -> Optional[Any]:
-        session_id = self.token_provider
-        xml = get_bill_charges_paged_template(
-            session_id=session_id,
-            request_id=request_id,
-            page=page,
-            login=config.beeline_login,
-            records_per_page=records_per_page
-        )
-        return _make_soap_request(
-            xml,
-            "urn:uss-wsapi:Subscriber:SubscriberInterface:getBillChargesPagedRequest"
+            "urn:uss-wsapi:Subscriber:SubscriberInterface:addDelSOCRequest"
         )
 
     def get_sim_list(
@@ -441,7 +199,7 @@ class BeelineSoapClient:
         ban: str,
         page: int = None,
         ctn: str = None,
-        records_per_page: str = None
+        records_per_page: int = None
     ) -> Optional[Any]:
         session_id = self.token_provider
         xml = get_sim_list_paged_template(
@@ -455,6 +213,29 @@ class BeelineSoapClient:
         return _make_soap_request(
             xml,
             "urn:uss-wsapi:Subscriber:SubscriberInterface:getSIMListPagedRequest"
+        )
+
+    def get_request_list(
+        self,
+        page: int = None,
+        start_date: str = None,
+        end_date: str = None,
+        request_id: str = None,
+        records_per_page: int = None
+    ) -> Optional[Any]:
+        session_id = self.token_provider
+        xml = get_request_list_template(
+            session_id=session_id,
+            page=page,
+            login=config.beeline_login,
+            start_date=start_date,
+            end_date=end_date,
+            request_id=request_id,
+            records_per_page=records_per_page
+        )
+        return _make_soap_request(
+            xml,
+            "urn:uss-wsapi:Subscriber:SubscriberInterface:getRequestListRequest"
         )
 
     def get_services_list(
@@ -479,7 +260,7 @@ class BeelineSoapClient:
         ban: str,
         page: int = None,
         ctn: str = None,
-        ctn_amount_per_page: str = None
+        ctn_amount_per_page: int = None
     ) -> Optional[Any]:
         session_id = self.token_provider
         xml = get_services_list_paged_template(
@@ -495,6 +276,120 @@ class BeelineSoapClient:
             "urn:uss-wsapi:Subscriber:SubscriberInterface:getServicesListPagedRequest"
         )
 
+    def get_ctn_info_list(
+        self,
+        ban: str,
+        ctn: str = None
+    ) -> Optional[Any]:
+        """
+        Получения информации об абонентах на уровне BAN/CTN.
+        """
+        session_id = self.token_provider # get_beeline_token()
+        xml = get_ctn_info_list_template(
+            ban=ban,
+            session_id=session_id,
+            ctn=ctn,
+            login=config.beeline_login
+        )
+        return _make_soap_request(
+            xml,
+            "urn:uss-wsapi:Subscriber:SubscriberInterface:getCTNInfoListRequest"
+        )
+
+    def get_ctn_info_list_paged(
+        self,
+        ban: str,
+        ctn: str = None,
+        page: int = None,
+        records_per_page: int = None
+    ) -> Optional[Any]:
+        """
+        Получения информации об абонентах на уровне BAN/CTN.
+        """
+        session_id = self.token_provider
+        xml = get_ctn_info_list_paged_template(
+            ban=ban,
+            session_id=session_id,
+            ctn=ctn,
+            page=page,
+            records_per_page=records_per_page,
+            login=config.beeline_login
+        )
+        return _make_soap_request(
+            xml,
+            "urn:uss-wsapi:Subscriber:SubscriberInterface:getCTNInfoListRequest"
+        )
+
+    def get_payment_list(
+        self,
+        ban: str,
+        start_date: str,
+        end_date: str,
+        ctn: str = None
+    ) -> Optional[Any]:
+        """
+        Получение списка платежей.
+        """
+        session_id = self.token_provider
+        xml = get_payment_list_template(
+            ban=ban,
+            start_date=start_date,
+            end_date=end_date,
+            ctn=ctn,
+            session_id=session_id,
+            login=config.beeline_login
+        )
+        return _make_soap_request(
+            xml,
+            "urn:uss-wsapi:Subscriber:SubscriberInterface:getPaymentListRequest"
+        )
+
+    def get_payment_list_paged(
+        self,
+        ban: str,
+        start_date: str,
+        end_date: str,
+        ctn: str = None,
+        page: int = None,
+        records_per_page: int = None
+    ) -> Optional[Any]:
+        """
+        Получение списка платежей.
+        """
+        session_id = self.token_provider
+        xml = get_payment_list_paged_template(
+            ban=ban,
+            start_date=start_date,
+            end_date=end_date,
+            ctn=ctn,
+            session_id=session_id,
+            login=config.beeline_login,
+            page=page,
+            records_per_page=records_per_page
+        )
+        return _make_soap_request(
+            xml,
+            "urn:uss-wsapi:Subscriber:SubscriberInterface:getPaymentListRequest"
+        )
+
+    def get_unbilled_balance(
+        self,
+        ctn: str
+    ) -> Optional[Any]:
+        """
+        Небиллингованный баланс лицевого счёта (getUnbilledBalances).
+        """
+        session_id = self.token_provider
+        xml = get_unbilled_balance_template(
+            ctn=ctn,
+            session_id=session_id,
+            login=config.beeline_login
+        )
+        return _make_soap_request(
+            xml,
+            "urn:uss-wsapi:Subscriber:SubscriberInterface:getUnbilledBalancesRequest"
+        )
+
     def get_unbilled_calls_list(
         self,
         ctn: str
@@ -508,6 +403,246 @@ class BeelineSoapClient:
         return _make_soap_request(
             xml,
             "urn:uss-wsapi:Subscriber:SubscriberInterface:getUnbilledCallsListRequest"
+        )
+
+    def get_adjustment_list(
+        self,
+        ban: str,
+        start_date: str,
+        end_date: str
+    ) -> Optional[Any]:
+        session_id = self.token_provider
+        xml = get_adjustment_list_template(
+            session_id=session_id,
+            ban=ban,
+            start_date=start_date,
+            end_date=end_date,
+            login=config.beeline_login
+        )
+        return _make_soap_request(
+            xml,
+            "urn:uss-wsapi:Subscriber:SubscriberInterface:getAdjustmentListRequest"
+        )
+
+    def create_bill_calls_request(
+        self,
+        ban: str,
+        bill_date: str,
+        ctn_list: str = None
+    ) -> Optional[Any]:
+        """
+        Запрос звонков по счёту.
+        """
+        session_id = self.token_provider
+        xml = create_bill_calls_request_template(
+            session_id=session_id,
+            ban=ban,
+            bill_date=bill_date,
+            login=config.beeline_login,
+            ctn_list=ctn_list
+        )
+        return _make_soap_request(
+            xml,
+            "urn:uss-wsapi:Subscriber:SubscriberInterface:createBillCallsRequest"
+        )
+
+    def create_bill_charges_request(
+        self,
+        ban: str,
+        bill_date: str,
+        ctn_list: str = None
+    ) -> Optional[Any]:
+        """
+        Запрос начислений по счёту.
+        """
+        session_id = self.token_provider
+        xml = create_bill_charges_request_template(
+            session_id=session_id,
+            ban=ban,
+            bill_date=bill_date,
+            login= config.beeline_login,
+            ctn_list=ctn_list
+        )
+        return _make_soap_request(
+            xml,
+            "urn:uss-wsapi:Subscriber:SubscriberInterface:createBillChargesRequest"
+        )
+
+    def get_bill_calls(
+        self,
+        request_id: str
+    ) -> Optional[Any]:
+        session_id = self.token_provider
+        xml = get_bill_calls_template(
+            session_id=session_id,
+            request_id=request_id,
+            login=config.beeline_login
+        )
+        return _make_soap_request(
+            xml,
+            "urn:uss-wsapi:Subscriber:SubscriberInterface:getBillCallsRequest"
+        )
+
+    def get_bill_calls_paged(
+        self,
+        request_id: str,
+        page: int = None,
+        records_per_page: int = None
+    ) -> Optional[Any]:
+        """
+        Получить звонки с пагинацией.
+        """
+        session_id = self.token_provider
+        xml = get_bill_calls_paged_template(
+            session_id=session_id,
+            request_id=request_id,
+            page=page,
+            login=config.beeline_login,
+            records_per_page=records_per_page
+        )
+        return _make_soap_request(
+            xml,
+            "urn:uss-wsapi:Subscriber:SubscriberInterface:getBillCallsPagedRequest"
+        )
+
+    def get_bill_charges(
+        self,
+        request_id: str
+    ) -> Optional[Any]:
+        session_id = self.token_provider
+        xml = get_bill_charges_template(
+            session_id=session_id,
+            request_id=request_id,
+            login=config.beeline_login
+        )
+        return _make_soap_request(
+            xml,
+            "urn:uss-wsapi:Subscriber:SubscriberInterface:getBillChargesRequest"
+        )
+
+    def get_bill_charges_paged(
+        self,
+        request_id: str,
+        page: int = None,
+        records_per_page: int = None
+    ) -> Optional[Any]:
+        session_id = self.token_provider
+        xml = get_bill_charges_paged_template(
+            session_id=session_id,
+            request_id=request_id,
+            page=page,
+            login=config.beeline_login,
+            records_per_page=records_per_page
+        )
+        return _make_soap_request(
+            xml,
+            "urn:uss-wsapi:Subscriber:SubscriberInterface:getBillChargesPagedRequest"
+        )
+
+    def get_ban_info_list(
+        self,
+    ) -> Optional[Any]:
+        """
+        Получение информации о BAN по логину.
+        """
+        session_id = self.token_provider
+        xml = get_ban_info_list_template(
+            session_id=session_id,
+            login=config.beeline_login
+        )
+        return _make_soap_request(
+            xml,
+            "urn:uss-wsapi:Subscriber:SubscriberInterface:getBANInfoListRequest"
+        )
+
+    def get_ban_info_list_paged(
+        self,
+        page: int = None,
+        records_per_page: int = None
+    ) -> Optional[Any]:
+        """
+        Получить BAN с пагинацией.
+        """
+        session_id = self.token_provider
+        xml = get_ban_info_list_paged_template(
+            session_id=session_id,
+            login=config.beeline_login,
+            page=page,
+            records_per_page=records_per_page
+        )
+        return _make_soap_request(
+            xml,
+            "urn:uss-wsapi:Subscriber:SubscriberInterface:getBANInfoListPagedRequest"
+        )
+
+    def create_details_request(
+        self,
+        ctn: str,
+        period_start: str,
+        period_end: str,
+        format_: str,
+        channel: str = None,
+        email: str = None
+    ) -> Optional[Any]:
+        """
+        Создать детализацию.
+        """
+        session_id = self.token_provider
+        xml = create_details_request_template(
+            session_id=session_id,
+            ctn=ctn,
+            period_start=period_start,
+            period_end=period_end,
+            format_=format_,
+            login=config.beeline_login,
+            channel=channel,
+            email=email
+        )
+        return _make_soap_request(
+            xml,
+            "urn:uss-wsapi:Subscriber:SubscriberInterface:createDetailsRequest"
+        )
+
+    def get_details(
+        self,
+        request_id: str
+    ) -> Optional[Any]:
+        session_id = self.token_provider
+        xml = get_details_template(
+            session_id=session_id,
+            request_id=request_id,
+            login=config.beeline_login
+        )
+        return _make_soap_request(
+            xml,
+            "urn:uss-wsapi:Subscriber:SubscriberInterface:getDetailsRequest"
+        )
+
+    def add_shared_number_dol(
+        self,
+        ctn_form: str,
+        ctn_to: str,
+        ctn_type: str = None,
+        soc: str = None,
+        prepaid_state_chk_cancel: str = None,
+        check_add_number_registration: str = None
+    ) -> Optional[Any]:
+        """
+        Добавление одного номера в shared DOL.
+        """
+        session_id = self.token_provider
+        xml = add_shared_number_dol_template(
+            session_id=session_id,
+            ctn_form=ctn_form,
+            ctn_to=ctn_to,
+            ctn_type=ctn_type,
+            soc=soc,
+            prepaid_state_chk_cancel=prepaid_state_chk_cancel,
+            check_add_number_registration=check_add_number_registration
+        )
+        return _make_soap_request(
+            xml,
+            "urn:uss-wsapi:Subscriber:SubscriberInterface:addSharedNumberDOLRequest"
         )
 
     def add_shared_number_list_dol(
@@ -594,163 +729,6 @@ class BeelineSoapClient:
             "urn:uss-wsapi:Subscriber:SubscriberInterface:personalDataResultRequest"
         )
 
-    def get_data_report(
-        self,
-        request_id: str,
-        page: int = None,
-        records_per_page: str = None
-    ) -> Optional[Any]:
-        """
-        Получение отчета о данных.
-        """
-        session_id = self.token_provider
-        xml = get_data_report_template(
-            session_id=session_id,
-            request_id=request_id,
-            page=page,
-            login=config.beeline_login,
-            records_per_page=records_per_page
-        )
-        return _make_soap_request(
-            xml,
-            "urn:uss-wsapi:Subscriber:SubscriberInterface:getDataReportRequest"
-        )
-
-    def get_ban_info_list(
-        self,
-    ) -> Optional[Any]:
-        """
-        Получение информации о BAN по логину.
-        """
-        session_id = self.token_provider
-        xml = get_ban_info_list_template(
-            session_id=session_id,
-            login=config.beeline_login
-        )
-        return _make_soap_request(
-            xml,
-            "urn:uss-wsapi:Subscriber:SubscriberInterface:getBANInfoListRequest"
-        )
-
-    def add_shared_number_dol(
-        self,
-        ctn_form: str,
-        ctn_to: str,
-        ctn_type: str = None,
-        soc: str = None,
-        prepaid_state_chk_cancel: str = None,
-        check_add_number_registration: str = None
-    ) -> Optional[Any]:
-        """
-        Добавление одного номера в shared DOL.
-        """
-        session_id = self.token_provider
-        xml = add_shared_number_dol_template(
-            session_id=session_id,
-            ctn_form=ctn_form,
-            ctn_to=ctn_to,
-            ctn_type=ctn_type,
-            soc=soc,
-            prepaid_state_chk_cancel=prepaid_state_chk_cancel,
-            check_add_number_registration=check_add_number_registration
-        )
-        return _make_soap_request(
-            xml,
-            "urn:uss-wsapi:Subscriber:SubscriberInterface:addSharedNumberDOLRequest"
-        )
-
-    def create_bill_calls_request(
-        self,
-        ban: str,
-        bill_date: str,
-        ctn_list: str = None
-    ) -> Optional[Any]:
-        """
-        Запрос звонков по счёту.
-        """
-        session_id = self.token_provider
-        xml = create_bill_calls_request_template(
-            session_id=session_id,
-            ban=ban,
-            bill_date=bill_date,
-            login=config.beeline_login,
-            ctn_list=ctn_list
-        )
-        return _make_soap_request(
-            xml,
-            "urn:uss-wsapi:Subscriber:SubscriberInterface:createBillCallsRequest"
-        )
-
-    def create_bill_charges_request(
-        self,
-        ban: str,
-        bill_date: str,
-        ctn_list: str = None
-    ) -> Optional[Any]:
-        """
-        Запрос начислений по счёту.
-        """
-        session_id = self.token_provider
-        xml = create_bill_charges_request_template(
-            session_id=session_id,
-            ban=ban,
-            bill_date=bill_date,
-            login= config.beeline_login,
-            ctn_list=ctn_list
-        )
-        return _make_soap_request(
-            xml,
-            "urn:uss-wsapi:Subscriber:SubscriberInterface:createBillChargesRequest"
-        )
-
-    def create_details_request(
-        self,
-        ctn: str,
-        period_start: str,
-        period_end: str,
-        format_: str,
-        channel: str = None,
-        email: str = None
-    ) -> Optional[Any]:
-        """
-        Создать детализацию.
-        """
-        session_id = self.token_provider
-        xml = create_details_request_template(
-            session_id=session_id,
-            ctn=ctn,
-            period_start=period_start,
-            period_end=period_end,
-            format_=format_,
-            login=config.beeline_login,
-            channel=channel,
-            email=email
-        )
-        return _make_soap_request(
-            xml,
-            "urn:uss-wsapi:Subscriber:SubscriberInterface:createDetailsRequest"
-        )
-
-    def get_ban_info_list_paged(
-        self,
-        page: int = None,
-        records_per_page: str = None
-    ) -> Optional[Any]:
-        """
-        Получить BAN с пагинацией.
-        """
-        session_id = self.token_provider
-        xml = get_ban_info_list_paged_template(
-            session_id=session_id,
-            login=config.beeline_login,
-            page=page,
-            records_per_page=records_per_page
-        )
-        return _make_soap_request(
-            xml,
-            "urn:uss-wsapi:Subscriber:SubscriberInterface:getBANInfoListPagedRequest"
-        )
-
     def get_data(
         self,
         ban: str,
@@ -771,4 +749,26 @@ class BeelineSoapClient:
         return _make_soap_request(
             xml,
             "urn:uss-wsapi:Subscriber:SubscriberInterface:getDataRequest"
+        )
+
+    def get_data_report(
+        self,
+        request_id: str,
+        page: int = None,
+        records_per_page: int = None
+    ) -> Optional[Any]:
+        """
+        Получение отчета о данных.
+        """
+        session_id = self.token_provider
+        xml = get_data_report_template(
+            session_id=session_id,
+            request_id=request_id,
+            page=page,
+            login=config.beeline_login,
+            records_per_page=records_per_page
+        )
+        return _make_soap_request(
+            xml,
+            "urn:uss-wsapi:Subscriber:SubscriberInterface:getDataReportRequest"
         )

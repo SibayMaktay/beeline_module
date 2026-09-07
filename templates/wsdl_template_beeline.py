@@ -35,14 +35,10 @@ def universal_soap_template(
     params = {**kwargs, "token": session_id}
     return make_soap_xml(action, interface, params)
 
-# Method Auth
 def get_auth_template(
     login: str,
     password: str
 ) -> str:
-    """
-    Аутентификация пользователя по связке логин/пароль.
-    """
     action = "auth"
     interface = "Auth"
     head = xml_head_template.format(interface=interface, action=action)
@@ -52,7 +48,6 @@ def get_auth_template(
             <password>{password}</password>
 {footer}"""
 
-# Method service Subscriber
 def suspend_ctn_template(
     ctn: str,
     reason_code: str,
@@ -60,9 +55,6 @@ def suspend_ctn_template(
     login: str = None,
     actv_date: str = None
 ):
-    """
-    Создание запроса на блокировку абонента.
-    """
     return universal_soap_template(
         session_id,
         "suspendCTN",
@@ -79,9 +71,6 @@ def restore_ctn_template(
     login: str = None,
     actv_date: str = None
 ):
-    """
-    Создание запроса на разблокировку абонента.
-    """
     return universal_soap_template(
         session_id,
         "restoreCTN",
@@ -97,9 +86,6 @@ def replace_sim_template(
     session_id: str,
     login: str = None
 ):
-    """
-    Создание запроса на замену SIM карты абонента.
-    """
     return universal_soap_template(
         session_id,
         "replaceSIM",
@@ -116,9 +102,6 @@ def change_pp_template(
     login: str = None,
     free_change: str = "false"
 ):
-    """
-    Создание запроса на смену тарифного плана.
-    """
     return universal_soap_template(
         session_id,
         "changePP",
@@ -138,9 +121,6 @@ def add_del_soc_template(
     exp_date: str = None,
     login: str = None
 ):
-    """
-    Создание запроса на подключение/отключение услуги.
-    """
     return universal_soap_template(
         session_id,
         "addDelSOC",
@@ -158,9 +138,6 @@ def get_sim_list_template(
     ctn: str = None,
     login: str = None
 ):
-    """
-    Получить список SIM по BAN/CTN.
-    """
     return universal_soap_template(
         session_id,
         "getSIMList",
@@ -177,9 +154,6 @@ def get_sim_list_paged_template(
     login: str = None,
     records_per_page: int = None
 ):
-    """
-    Получить список SIM по BAN/CTN с пагинацией.
-    """
     return universal_soap_template(
         session_id,
         "getSIMListPaged",
@@ -199,9 +173,6 @@ def get_request_list_template(
     request_id: str = None,
     records_per_page: int = None
 ):
-    """
-    Получить список заявок.
-    """
     return universal_soap_template(
         session_id,
         "getRequestList",
@@ -219,9 +190,6 @@ def get_services_list_template(
     ctn: str = None,
     login: str = None
 ):
-    """
-    Получить список услуг по BAN/CTN.
-    """
     return universal_soap_template(
         session_id,
         "getServicesList",
@@ -238,9 +206,6 @@ def get_services_list_paged_template(
     login: str = None,
     ctn_amount_per_page: int = None
 ):
-    """
-    Получить список услуг по BAN/CTN с пагинацией.
-    """
     return universal_soap_template(
         session_id,
         "getServicesListPaged",
@@ -257,9 +222,6 @@ def get_ctn_info_list_template(
     ctn: str = None,
     login: str = None
 ):
-    """
-    Получения информации об абонентах на уровне BAN/CTN.
-    """
     return universal_soap_template(
         session_id,
         "getCTNInfoList",
@@ -276,9 +238,6 @@ def get_ctn_info_list_paged_template(
     ctn: str = None,
     records_per_page: int = None
 ):
-    """
-    Получения информации об абонентах на уровне BAN/CTN.
-    """
     return universal_soap_template(
         session_id,
         "getCTNInfoListPaged",
@@ -334,9 +293,6 @@ def get_unbilled_balance_template(
     session_id: str,
     login: str
 ):
-    """
-    Возвращает сумму списания за текущий период абонента (постпейд).
-    """
     return universal_soap_template(
         session_id,
         "getUnbilledBalances",
@@ -349,9 +305,6 @@ def get_unbilled_calls_list_template(
     ctn: str,
     login: str = None
 ):
-    """
-    Получить список невыставленных звонков по CTN.
-    """
     return universal_soap_template(
         session_id,
         "getUnbilledCallsList",
@@ -366,9 +319,6 @@ def get_adjustment_list_template(
     end_date: str,
     login: str = None
 ):
-    """
-    Получить список корректировок по BAN за период.
-    """
     return universal_soap_template(
         session_id,
         "getAdjustmentList",
@@ -385,9 +335,6 @@ def create_bill_calls_request_template(
     login: str = None,
     ctn_list: str = None
 ):
-    """
-    Создать запрос на получение звонков по счёту.
-    """
     return universal_soap_template(
         session_id,
         "createBillCallsRequest",
@@ -404,9 +351,6 @@ def create_bill_charges_request_template(
     login: str = None,
     ctn_list: str = None
 ):
-    """
-    Создать запрос на получение списаний по счёту.
-    """
     return universal_soap_template(
         session_id,
         "createBillChargesRequest",
@@ -421,9 +365,6 @@ def get_bill_calls_template(
     request_id: str,
     login: str = None
 ):
-    """
-    Получить список звонков по запросу детализации.
-    """
     return universal_soap_template(
         session_id,
         "getBillCalls",
@@ -438,9 +379,6 @@ def get_bill_calls_paged_template(
     login: str = None,
     records_per_page: int = None
 ):
-    """
-    Получить звонки по детализации с пагинацией.
-    """
     return universal_soap_template(
         session_id,
         "getBillCallsPaged",
@@ -455,9 +393,6 @@ def get_bill_charges_template(
     request_id: str,
     login: str = None
 ):
-    """
-    Получить итоговые услуги по запросу детализации.
-    """
     return universal_soap_template(
         session_id,
         "getBillCharges",
@@ -472,9 +407,6 @@ def get_bill_charges_paged_template(
     login: str = None,
     records_per_page: int = None
 ):
-    """
-    Получить итоговые услуги по запросу детализации (с пагинацией).
-    """
     return universal_soap_template(
         session_id,
         "getBillChargesPaged",
@@ -488,9 +420,6 @@ def get_ban_info_list_template(
     session_id: str,
     login: str
 ):
-    """
-    Получить список BAN по логину.
-    """
     return universal_soap_template(
         session_id,
         "getBANInfoList",
@@ -503,9 +432,6 @@ def get_ban_info_list_paged_template(
     page: int = 1,
     records_per_page: int = None
 ):
-    """
-    Получить список BAN по логину с пагинацией.
-    """
     return universal_soap_template(
         session_id,
         "getBANInfoListPaged",
@@ -524,9 +450,6 @@ def create_details_request_template(
     channel: str = None,
     email: str = None
 ):
-    """
-    Создать запрос детализации.
-    """
     return universal_soap_template(
         session_id,
         "createDetailsRequest",
@@ -544,9 +467,6 @@ def get_details_template(
     request_id: str,
     login: str = None
 ):
-    """
-    Получить детализацию запроса по его requestId.
-    """
     return universal_soap_template(
         session_id,
         "getDetails",
@@ -563,9 +483,6 @@ def add_shared_number_dol_template(
     prepaid_state_chk_cancel: str,
     check_add_number_registration: str
 ):
-    """
-    Добавить номер в shared DOL (предполагается, что все параметры обязательные).
-    """
     return universal_soap_template(
         session_id,
         "addSharedNumberDOL",
@@ -586,9 +503,6 @@ def add_shared_number_list_dol_template(
     prepaid_state_chk_cancel: str = None,
     check_add_number_registration: str = None
 ):
-    """
-    Добавить абонентов в shared list DOL.
-    """
     return universal_soap_template(
         session_id,
         "addSharedNumberListDOL",
@@ -606,9 +520,6 @@ def delete_shared_number_list_dol_template(
     ctn_to_list: str,
     ctn_to: str
 ):
-    """
-    Удалить абонентов из shared list DOL.
-    """
     return universal_soap_template(
         session_id,
         "deleteSharedNumberListDOL",
@@ -622,9 +533,6 @@ def personal_data_update_template(
     data: dict,
     login: str = None
 ):
-    """
-    Обновление персональных данных абонента.
-    """
     data_xml = "".join(
         f"<{key}>{val}</{key}>" for key, val in data.items() if val is not None
     )
@@ -640,9 +548,6 @@ def personal_data_result_template(
     request_id: str,
     login: str = None
 ):
-    """
-    Получение результата обновления персональных данных по request_id.
-    """
     return universal_soap_template(
         session_id,
         "personalDataResult",
@@ -657,9 +562,6 @@ def get_data_template(
     hierarchy_id: str,
     subscriber_no: str
 ):
-    """
-    Получить данные по абоненту и иерархии.
-    """
     return universal_soap_template(
         session_id,
         "getData",
@@ -676,14 +578,61 @@ def get_data_report_template(
     login: str = None,
     records_per_page: int = None
 ):
-    """
-    Получить отчёт о данных.
-    """
     return universal_soap_template(
         session_id,
         "getDataReport",
         requestId=request_id,
         page=page,
         recordsPerPage=records_per_page,
+        login=login
+    )
+
+def activate_convergent_user_template(
+    session_id: str,
+    login: str = None
+):
+    return universal_soap_template(
+        session_id,
+        "activateConvergentUser",
+        login=login
+    )
+
+def add_ple_subscriber_limit_info_template(
+    session_id: str,
+    login: str = None
+):
+    return universal_soap_template(
+        session_id,
+        "addPleSubscriberLimitInfo",
+        login=login
+    )
+
+def cancel_fake_subscription_template(
+    session_id: str,
+    login: str = None
+):
+    return universal_soap_template(
+        session_id,
+        "cancelFakeSubscription",
+        login=login
+    )
+
+def create_or_delete_invited_fttb_ctn_template(
+    session_id: str,
+    login: str = None
+):
+    return universal_soap_template(
+        session_id,
+        "createOrDeleteInvitedFttbCtn",
+        login=login
+    )
+
+def notify_about_block_template(
+    session_id: str,
+    login: str = None
+):
+    return universal_soap_template(
+        session_id,
+        "notifyAboutBlock",
         login=login
     )
