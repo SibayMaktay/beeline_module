@@ -541,6 +541,17 @@ def get_data_report_app(
 # BAN (Business Account Number)
 # ============================================================================
 
+@router.post("/getBANInfoList", summary="Получить информацию о BAN")
+def get_ban_info_list_app(
+    api_key: str = Depends(verify_api_key),
+    beeline_soap: BeelineSoapClient = Depends(get_soap_client),
+):
+    """
+    Получение информации о BAN.
+    """
+    result = beeline_soap.get_ban_info_list()
+    return {"status": "success", "data": result}
+
 @router.post("/getBANInfoListPaged", summary="Получить информацию о BAN (пагинация)")
 def get_ban_info_list_paged_app(
     request: GetBANInfoListPagedRequest,
@@ -551,9 +562,8 @@ def get_ban_info_list_paged_app(
     Получение информации о BAN с пагинацией.
     """
     result = beeline_soap.get_ban_info_list_paged(
-        ban=request.ban,
-        page_number=request.pageNumber,
-        page_size=request.pageSize
+        page=request.page,
+        records_per_page=request.records_per_page
     )
     return {"status": "success", "data": result}
 
