@@ -134,7 +134,7 @@ class GetBillChargesPaged(GetBillCharges):
 class GetBANInfoListPaged(BaseModel):
     """Модель для получения списка BAN с пагинацией."""
     page: Optional[int] = Field(None, description="Номер страницы", ge=1)
-    records_per_page: Optional[int] = Field(None, description="Записей на страницу")
+    records_per_page: Optional[int] = Field(None, description="Записей на страницу", ge=50)
 
 
 class CreateDetailsRequest(BaseModel):
