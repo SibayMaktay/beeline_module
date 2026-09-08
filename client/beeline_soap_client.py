@@ -35,6 +35,9 @@ def _make_soap_request(xml_payload: str, action: str) -> Optional[Any]:
             timeout=30
         )
         response.raise_for_status()
+        logger.debug("SOAP XML:\n%s", xml_payload)
+        logger.debug("Headers: %s", headers)
+        logger.debug("URL: %s", f"{config.beeline_url_base}/api/SubscriberService")
 
         try:
             import xmltodict
