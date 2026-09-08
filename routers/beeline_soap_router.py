@@ -51,7 +51,7 @@ def suspend_ctn_app(
     - **actv_date**: дата блокировки
     """
     data = beeline_soap.suspend_ctn(
-        ctn,
+        ctn=ctn,
         reason_code=request.reason_code,
         actv_date=request.actv_date
     )
@@ -75,7 +75,7 @@ def restore_ctn_app(
     - **actv_date**: дата разблокировки
     """
     data = beeline_soap.restore_ctn(
-        ctn,
+        ctn=ctn,
         reason_code=request.reason_code,
         actv_date=request.actv_date
     )
@@ -97,7 +97,7 @@ def replace_sim_app(
     - **serial_number**: номер SIM-карты
     """
     data = beeline_soap.replace_sim(
-        ctn,
+        ctn=ctn,
         serial_number=request.serial_number,
     )
     return {"status": "success", "data": data}
@@ -125,7 +125,7 @@ def change_pp_app(
         - значение по умолчанию **false**.
     """
     data = beeline_soap.change_pp(
-        ctn,
+        ctn=ctn,
         price_plan=request.price_plan,
         future_date=request.future_date,
         free_change=request.free_change
@@ -153,7 +153,7 @@ def add_del_soc_app(
     - **exp_date**: дата автоматического отключения услуги
     """
     data = beeline_soap.add_del_soc(
-        ctn,
+        ctn=ctn,
         soc=request.soc,
         inclusion_type=request.inclusion_type,
         eff_date=request.eff_date,
@@ -312,7 +312,7 @@ def get_ctn_info_list_paged_app(
     - **records_per_page**: количество записей на странице выдачи
     """
     data = beeline_soap.get_ctn_info_list_paged(
-        ctn,
+        ctn=ctn,
         ban=request.ban,
         page=request.page,
         records_per_page=request.records_per_page
