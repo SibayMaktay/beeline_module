@@ -24,7 +24,7 @@ def _make_soap_request(xml_payload: str, action: str) -> Optional[Any]:
     """
     headers = {
         "Content-Type": "text/xml; charset=utf-8",
-        "SOAPAction": f'"{action}"'
+        "SOAPAction": action
     }
 
     try:
