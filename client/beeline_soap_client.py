@@ -116,7 +116,7 @@ class BeelineSoapClient:
             login=config.beeline_login,
         )
         return _make_soap_request(
-            xml=xml,
+            xml_payload=xml,
             action="suspendCTN"
         )
 
@@ -138,7 +138,7 @@ class BeelineSoapClient:
             login=config.beeline_login
         )
         return _make_soap_request(
-            xml=xml,
+            xml_payload=xml,
             action="restoreCTN"
         )
 
@@ -158,7 +158,7 @@ class BeelineSoapClient:
             login=config.beeline_login
         )
         return _make_soap_request(
-            xml=xml,
+            xml_payload=xml,
             action="replaceSIM"
         )
 
@@ -182,7 +182,7 @@ class BeelineSoapClient:
             login=config.beeline_login
         )
         return _make_soap_request(
-            xml=xml,
+            xml_payload=xml,
             action="changePP"
         )
 
@@ -208,7 +208,7 @@ class BeelineSoapClient:
             login=config.beeline_login
         )
         return _make_soap_request(
-            xml=xml,
+            xml_payload=xml,
             action="addDelSOC"
         )
 
@@ -225,7 +225,7 @@ class BeelineSoapClient:
             login=config.beeline_login
         )
         return _make_soap_request(
-            xml=xml,
+            xml_payload=xml,
             action="getSIMList"
         )
 
@@ -246,7 +246,7 @@ class BeelineSoapClient:
             records_per_page=records_per_page
         )
         return _make_soap_request(
-            xml=xml,
+            xml_payload=xml,
             action="getSIMListPaged"
         )
 
@@ -269,7 +269,7 @@ class BeelineSoapClient:
             records_per_page=records_per_page
         )
         return _make_soap_request(
-            xml=xml,
+            xml_payload=xml,
             action="getRequestList"
         )
 
@@ -286,7 +286,7 @@ class BeelineSoapClient:
             login=config.beeline_login
         )
         return _make_soap_request(
-            xml=xml,
+            xml_payload=xml,
             action="getServicesList"
         )
 
@@ -307,7 +307,7 @@ class BeelineSoapClient:
             ctn_amount_per_page=ctn_amount_per_page
         )
         return _make_soap_request(
-            xml=xml,
+            xml_payload=xml,
             action="getServicesListPaged"
         )
 
@@ -327,7 +327,7 @@ class BeelineSoapClient:
             login=config.beeline_login
         )
         return _make_soap_request(
-            xml=xml,
+            xml_payload=xml,
             action="getCTNInfoList"
         )
 
@@ -351,7 +351,7 @@ class BeelineSoapClient:
             login=config.beeline_login
         )
         return _make_soap_request(
-            xml=xml,
+            xml_payload=xml,
             action="getCTNInfoList"
         )
 
@@ -375,7 +375,7 @@ class BeelineSoapClient:
             login=config.beeline_login
         )
         return _make_soap_request(
-            xml=xml,
+            xml_payload=xml,
             action="getPaymentList"
         )
 
@@ -403,7 +403,7 @@ class BeelineSoapClient:
             records_per_page=records_per_page
         )
         return _make_soap_request(
-            xml=xml,
+            xml_payload=xml,
             action="getPaymentList"
         )
 
@@ -421,7 +421,7 @@ class BeelineSoapClient:
             login=config.beeline_login
         )
         return _make_soap_request(
-            xml=xml,
+            xml_payload=xml,
             action="getUnbilledBalances"
         )
 
@@ -436,7 +436,7 @@ class BeelineSoapClient:
             login=config.beeline_login
         )
         return _make_soap_request(
-            xml=xml,
+            xml_payload=xml,
             action="getUnbilledCallsList"
         )
 
@@ -455,7 +455,7 @@ class BeelineSoapClient:
             login=config.beeline_login
         )
         return _make_soap_request(
-            xml=xml,
+            xml_payload=xml,
             action="getAdjustmentList"
         )
 
@@ -477,7 +477,7 @@ class BeelineSoapClient:
             ctn_list=ctn_list
         )
         return _make_soap_request(
-            xml=xml,
+            xml_payload=xml,
             action="createBillCalls"
         )
 
@@ -499,7 +499,7 @@ class BeelineSoapClient:
             ctn_list=ctn_list
         )
         return _make_soap_request(
-            xml=xml,
+            xml_payload=xml,
             action="createBillCharges"
         )
 
@@ -514,7 +514,7 @@ class BeelineSoapClient:
             login=config.beeline_login
         )
         return _make_soap_request(
-            xml=xml,
+            xml_payload=xml,
             action="getBillCalls"
         )
 
@@ -536,7 +536,7 @@ class BeelineSoapClient:
             records_per_page=records_per_page
         )
         return _make_soap_request(
-            xml=xml,
+            xml_payload=xml,
             action="getBillCallsPaged"
         )
 
@@ -551,7 +551,7 @@ class BeelineSoapClient:
             login=config.beeline_login
         )
         return _make_soap_request(
-            xml=xml,
+            xml_payload=xml,
             action="getBillCharges"
         )
 
@@ -570,7 +570,7 @@ class BeelineSoapClient:
             records_per_page=records_per_page
         )
         return _make_soap_request(
-            xml=xml,
+            xml_payload=xml,
             action="getBillChargesPaged"
         )
 
@@ -586,7 +586,7 @@ class BeelineSoapClient:
             login=config.beeline_login
         )
         return _make_soap_request(
-            xml=xml,
+            xml_payload=xml,
             action="getBANInfoList"
         )
 
@@ -606,7 +606,7 @@ class BeelineSoapClient:
             records_per_page=records_per_page
         )
         return _make_soap_request(
-            xml=xml,
+            xml_payload=xml,
             action="getBANInfoListPaged"
         )
 
@@ -634,7 +634,7 @@ class BeelineSoapClient:
             email=email
         )
         return _make_soap_request(
-            xml=xml,
+            xml_payload=xml,
             action="createDetails"
         )
 
@@ -649,7 +649,7 @@ class BeelineSoapClient:
             login=config.beeline_login
         )
         return _make_soap_request(
-            xml=xml,
+            xml_payload=xml,
             action="getDetails"
         )
 
@@ -676,7 +676,7 @@ class BeelineSoapClient:
             check_add_number_registration=check_add_number_registration
         )
         return _make_soap_request(
-            xml=xml,
+            xml_payload=xml,
             action="addSharedNumberDOL"
         )
 
@@ -703,7 +703,7 @@ class BeelineSoapClient:
             check_add_number_registration=check_add_number_registration
         )
         return _make_soap_request(
-            xml=xml,
+            xml_payload=xml,
             action="addSharedNumberListDOL"
         )
 
@@ -724,7 +724,7 @@ class BeelineSoapClient:
             ctn_to=ctn_to
         )
         return _make_soap_request(
-            xml=xml,
+            xml_payload=xml,
             action="deleteSharedNumberListDOL"
         )
 
@@ -742,7 +742,7 @@ class BeelineSoapClient:
             login=config.beeline_login
         )
         return _make_soap_request(
-            xml=xml,
+            xml_payload=xml,
             action="personalDataUpdate"
         )
 
@@ -760,7 +760,7 @@ class BeelineSoapClient:
             login=config.beeline_login
         )
         return _make_soap_request(
-            xml=xml,
+            xml_payload=xml,
             action="personalDataResult"
         )
 
@@ -782,7 +782,7 @@ class BeelineSoapClient:
             subscriber_no=subscriber_no
         )
         return _make_soap_request(
-            xml=xml,
+            xml_payload=xml,
             action="getData"
         )
 
@@ -804,6 +804,6 @@ class BeelineSoapClient:
             records_per_page=records_per_page
         )
         return _make_soap_request(
-            xml=xml,
+            xml_payload=xml,
             action="getDataReport"
         )
