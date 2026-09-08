@@ -3,7 +3,7 @@
 Все методы WSAPI Beeline доступны через этот роутер
 """
 import logging
-from fastapi import APIRouter, Depends, HTTPException, Header
+from fastapi import APIRouter, Depends, HTTPException, Header, Query
 from typing import Optional, List
 from pydantic import BaseModel, Field
 
@@ -29,11 +29,17 @@ def get_soap_client() -> BeelineSoapClient:
     return BeelineSoapClient(token_provider=token)
 
 
+def ctn_10_validator(ctn: str = Query(..., description="Номер **ctn** (ровно 10 цифр)")) -> str:
+    if not re.fullmatch(r'\d{10}', ctn):
+        raise HTTPException(status_code=422, detail="ctn должен содержать ровно 10 цифр")
+    return ctn
+
+
 
 @router.post("/suspendCTN", summary="Добровольная блокировка номера")
 def suspend_ctn_app(
     request: SuspendRestoreCTN,
-    ctn: str,
+    ctn: str = Depends(ctn_10_validator),
     api_key: str = Depends(verify_api_key),
     beeline_soap: BeelineSoapClient = Depends(get_soap_client),
 ):
@@ -60,7 +66,7 @@ def suspend_ctn_app(
 @router.post("/restoreCTN", summary="Разблокировка номера")
 def restore_ctn_app(
     request: SuspendRestoreCTN,
-    ctn: str,
+    ctn: str = Depends(ctn_10_validator),
     api_key: str = Depends(verify_api_key),
     beeline_soap: BeelineSoapClient = Depends(get_soap_client),
 ):
@@ -86,7 +92,7 @@ def restore_ctn_app(
 @router.post("/replaceSIM", summary="Замена SIM-карты")
 def replace_sim_app(
     request: ReplaceSIM,
-    ctn: str,
+    ctn: str = Depends(ctn_10_validator),
     api_key: str = Depends(verify_api_key),
     beeline_soap: BeelineSoapClient = Depends(get_soap_client),
 ):
@@ -107,7 +113,7 @@ def replace_sim_app(
 @router.post("/changePP", summary="Сменить тарифный план")
 def change_pp_app(
     request: ChangePP,
-    ctn: str,
+    ctn: str = Depends(ctn_10_validator),
     api_key: str = Depends(verify_api_key),
     beeline_soap: BeelineSoapClient = Depends(get_soap_client),
 ):
@@ -137,7 +143,7 @@ def change_pp_app(
 @router.post("/addDelSOC", summary="Подключить/отключить услугу")
 def add_del_soc_app(
     request: AddDelSOC,
-    ctn: str,
+    ctn: str = Depends(ctn_10_validator),
     api_key: str = Depends(verify_api_key),
     beeline_soap: BeelineSoapClient = Depends(get_soap_client),
 ):
@@ -373,7 +379,7 @@ def get_payment_list_paged_app(
 
 @router.post("/getUnbilledBalance", summary="Получить небиллингованный баланс")
 def get_unbilled_balance_app(
-    ctn: str,
+    ctn: str = Depends(ctn_10_validator),
     api_key: str = Depends(verify_api_key),
     beeline_soap: BeelineSoapClient = Depends(get_soap_client),
 ):
@@ -389,7 +395,7 @@ def get_unbilled_balance_app(
 
 @router.post("/getUnbilledCallsList", summary="Получения информации о необилленных звонках абонента")
 def get_unbilled_calls_list_app(
-    ctn: str,
+    ctn: str = Depends(ctn_10_validator),
     api_key: str = Depends(verify_api_key),
     beeline_soap: BeelineSoapClient = Depends(get_soap_client),
 ):
@@ -471,7 +477,7 @@ def create_bill_charges_request_app(
 
 @router.post("/getBillCalls", summary="Получить биллинг звонков")
 def get_bill_calls_app(
-    request: GetBillCalls,
+    request: GetBillCallsCharges,
     api_key: str = Depends(verify_api_key),
     beeline_soap: BeelineSoapClient = Depends(get_soap_client),
 ):
@@ -487,7 +493,7 @@ def get_bill_calls_app(
 
 @router.post("/getBillCallsPaged", summary="Получить биллинг звонков (пагинация)")
 def get_bill_calls_paged_app(
-    request: GetBillCallsPaged,
+    request: GetBillCallsChargesPaged,
     api_key: str = Depends(verify_api_key),
     beeline_soap: BeelineSoapClient = Depends(get_soap_client),
 ):
@@ -509,7 +515,7 @@ def get_bill_calls_paged_app(
 
 @router.post("/getBillCharges", summary="Получить биллинг списаний")
 def get_bill_charges_app(
-    request: GetBillCharges,
+    request: GetBillCallsCharges,
     api_key: str = Depends(verify_api_key),
     beeline_soap: BeelineSoapClient = Depends(get_soap_client),
 ):
@@ -525,7 +531,7 @@ def get_bill_charges_app(
 
 @router.post("/getBillChargesPaged", summary="Получить биллинг списаний (пагинация)")
 def get_bill_charges_paged_app(
-    request: GetBillChargesPaged,
+    request: GetBillCallsChargesPaged,
     api_key: str = Depends(verify_api_key),
     beeline_soap: BeelineSoapClient = Depends(get_soap_client),
 ):
@@ -579,7 +585,7 @@ def get_ban_info_list_paged_app(
 @router.post("/createDetails", summary="Создать запрос на детализацию")
 def create_details_app(
     request: CreateDetailsRequest,
-    ctn: str,
+    ctn: str = Depends(ctn_10_validator),
     api_key: str = Depends(verify_api_key),
     beeline_soap: BeelineSoapClient = Depends(get_soap_client),
 ):

@@ -1,9 +1,25 @@
 """
 Pydantic модели для валидации запросов API.
 """
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 from typing import Optional, List, Dict, Any
 import re
+
+class ModelBAN(BaseModel):
+    ban: str = Field(..., description="Номер **ban** (ровно 9 цифр)", min_length=9, max_length=9)
+    @field_validator('ban')
+    @classmethod
+    def validate_ban(cls, v: str) -> str:
+        if not re.match(r'^\d{9}$', v):
+            raise ValueError("ban должен содержать ровно 9 цифр")
+        return v
+
+class ModelPaged(BaseModel):
+    page: Optional[int] = Field(None, description="Номер страницы", ge=1)
+    records_per_page: Optional[int] = Field(None, description="Записей на страницу", ge=1, le=50)
+
+class ModelCTNAmountPerPage(BaseModel):
+    ctn_amount_per_page: Optional[int] = Field(None, description="Количество CTN на страницу", ge=1, le=50)
 
 class PutCallForwardRequestEdit(BaseModel):
     """Модель для редактирования переадресации."""
@@ -52,89 +68,69 @@ class AddDelSOC(BaseModel):
     exp_date: Optional[str] = Field(None, description="Дата окончания действия")
 
 
-class GetSIMList(BaseModel):
+class GetSIMList(ModelBAN):
     """Модель для получения списка SIM-карт."""
-    ban: str = Field(..., description="Лицевой счёт (BAN)")
-class GetSIMListPaged(GetSIMList):
+    pass
+class GetSIMListPaged(ModelBAN, ModelPaged):
     """Модель для получения списка SIM-карт с пагинацией."""
-    page: Optional[int] = Field(None, description="Номер страницы")
-    records_per_page: Optional[int] = Field(None, description="Записей на страницу")
+    pass
 
 
-class GetRequestList(BaseModel):
+class GetRequestList(ModelPaged):
     """Модель для получения списка запросов."""
-    page: Optional[int] = Field(None, description="Номер страницы")
     start_date: Optional[str] = Field(None, description="Дата начала периода")
     end_date: Optional[str] = Field(None, description="Дата окончания периода")
     request_id: Optional[str] = Field(None, description="ID запроса")
-    records_per_page: Optional[int] = Field(None, description="Записей на страницу")
 
 
-class GetServicesList(BaseModel):
+class GetServicesList(ModelBAN):
     """Модель для получения списка услуг."""
-    ban: str = Field(..., description="Лицевой счёт (BAN)")
-class GetServicesListPaged(GetServicesList):
+    pass
+class GetServicesListPaged(ModelBAN, ModelPaged, ModelCTNAmountPerPage):
     """Модель для получения списка услуг с пагинацией."""
-    page: Optional[int] = Field(None, description="Номер страницы")
-    ctn_amount_per_page: Optional[int] = Field(None, description="Количество CTN на страницу")
+    pass
 
 
-class GetCTNInfoList(BaseModel):
+class GetCTNInfoList(ModelBAN):
     """Модель для получения информации об абоненте."""
-    ban: str = Field(..., description="Лицевой счёт (BAN)")
-class GetCTNInfoListPaged(GetCTNInfoList):
+    pass
+class GetCTNInfoListPaged(ModelBAN, ModelPaged):
     """Модель для получения информации об абоненте с пагинацией."""
-    page: Optional[int] = Field(None, description="Номер страницы")
-    records_per_page: Optional[int] = Field(None, description="Записей на страницу")
+    pass
 
 
-class GetPaymentList(BaseModel):
+class GetPaymentList(ModelBAN):
     """Модель для получения информации о платежах."""
-    ban: str = Field(..., description="Лицевой счёт (BAN)")
     start_date: str = Field(..., description="Дата начала периода")
     end_date: str = Field(..., description="Дата окончания периода")
-class GetPaymentListPaged(GetPaymentList):
+class GetPaymentListPaged(GetPaymentList, ModelPaged):
     """Модель для получения информации о платежах с пагинацией."""
-    page: Optional[int] = Field(None, description="Номер страницы")
-    records_per_page: Optional[int] = Field(None, description="Записей на страницу")
+    pass
 
 
-class GetAdjustmentList(BaseModel):
+class GetAdjustmentList(ModelBAN):
     """Модель для получения информации о корректировках."""
-    ban: str = Field(..., description="Лицевой счёт (BAN)")
     start_date: str = Field(..., description="Дата начала периода")
     end_date: str = Field(..., description="Дата окончания периода")
 
 
-class CreateBillCallsChargesRequest(BaseModel):
+class CreateBillCallsChargesRequest(ModelBAN):
     """Модель для создания запроса детализации."""
-    ban: str = Field(..., description="Лицевой счёт (BAN)")
     bill_date: str = Field(..., description="Дата счёта")
     ctn_list: Optional[str] = Field(None, description="Список номеров")
 
 
-class GetBillCalls(BaseModel):
-    """Модель для получения отчёта по звонкам."""
+class GetBillCallsCharges(BaseModel):
+    """Модель для получения отчёта по звонкам/начислений."""
     request_id: str = Field(..., description="ID запроса")
-class GetBillCallsPaged(GetBillCalls):
-    """Модель для получения отчёта по звонкам с пагинацией."""
-    page: Optional[int] = Field(None, description="Номер страницы")
-    records_per_page: Optional[int] = Field(None, description="Записей на страницу")
+class GetBillCallsChargesPaged(GetBillCallsCharges, ModelPaged):
+    """Модель для получения отчёта по звонкам/начислений с пагинацией."""
+    pass
 
 
-class GetBillCharges(BaseModel):
-    """Модель для получения начислений."""
-    request_id: str = Field(..., description="ID запроса")
-class GetBillChargesPaged(GetBillCharges):
-    """Модель для получения начислений с пагинацией."""
-    page: Optional[int] = Field(None, description="Номер страницы")
-    records_per_page: Optional[int] = Field(None, description="Записей на страницу")
-
-
-class GetBANInfoListPaged(BaseModel):
+class GetBANInfoListPaged(ModelPaged):
     """Модель для получения списка BAN с пагинацией."""
-    page: Optional[int] = Field(None, description="Номер страницы", ge=1)
-    records_per_page: Optional[int] = Field(None, description="Записей на страницу", ge=50)
+    pass
 
 
 class CreateDetailsRequest(BaseModel):
@@ -179,9 +175,8 @@ class DeleteSharedNumberListDOL(SharedNumber):
     ctn_to_list: Optional[str] = Field(None, description="Список целевых номеров")
 
 
-class PersonalDataUpdate(BaseModel):
+class PersonalDataUpdate(ModelBAN):
     """Модель для обновления персональных данных."""
-    ban: Optional[str] = Field(None, description="Лицевой счёт")
     statusBan: Optional[str] = Field(None, description="Статус BAN")
     ctn: Optional[str] = Field(None, description="Номер телефона")
     marketCode: Optional[str] = Field(None, description="Код рынка")
@@ -249,15 +244,11 @@ class PersonalDataResult(BaseModel):
     request_id: str = Field(..., description="ID запроса")
 
 
-class GetData(BaseModel):
+class GetData(ModelBAN):
     """Модель для получения данных."""
-    ban: str = Field(..., description="Лицевой счёт (BAN)")
     hierarchy_id: str = Field(..., description="ID иерархии")
     subscriber_no: str = Field(..., description="Номер абонента")
 
-
-class GetDataReport(BaseModel):
+class GetDataReport(ModelPaged):
     """Модель для получения отчёта данных."""
     request_id: str = Field(..., description="ID запроса")
-    page: Optional[int] = Field(None, description="Номер страницы")
-    records_per_page: Optional[int] = Field(None, description="Записей на страницу")
