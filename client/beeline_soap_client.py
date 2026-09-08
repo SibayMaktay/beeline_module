@@ -45,6 +45,7 @@ def _make_soap_request(xml_payload: str, action: str) -> Optional[Any]:
             return result.get('soap:Envelope', {}).get('soap:Body', {})
         except ImportError:
             logger.warning("Установите 'xmltodict' для удобного парсинга.")
+            logger.debug(f"SOAP response: {response.text}")
             return {"raw_xml": response.text}
             
     except requests.exceptions.HTTPError as e:
