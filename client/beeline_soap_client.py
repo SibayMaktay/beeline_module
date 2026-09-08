@@ -352,7 +352,7 @@ class BeelineSoapClient:
         )
         return _make_soap_request(
             xml_payload=xml,
-            action="getCTNInfoList"
+            action="getCTNInfoListPaged"
         )
 
     def get_payment_list(
