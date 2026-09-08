@@ -404,7 +404,7 @@ class BeelineSoapClient:
         )
         return _make_soap_request(
             xml_payload=xml,
-            action="getPaymentList"
+            action="getPaymentListPaged"
         )
 
     def get_unbilled_balance(
@@ -478,7 +478,7 @@ class BeelineSoapClient:
         )
         return _make_soap_request(
             xml_payload=xml,
-            action="createBillCalls"
+            action="createBillCallsRequest"
         )
 
     def create_bill_charges_request(
@@ -500,7 +500,7 @@ class BeelineSoapClient:
         )
         return _make_soap_request(
             xml_payload=xml,
-            action="createBillCharges"
+            action="createBillChargesRequest"
         )
 
     def get_bill_calls(
@@ -635,7 +635,7 @@ class BeelineSoapClient:
         )
         return _make_soap_request(
             xml_payload=xml,
-            action="createDetails"
+            action="createDetailsRequest"
         )
 
     def get_details(
