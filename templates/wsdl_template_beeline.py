@@ -212,8 +212,7 @@ def get_services_list_paged_template(
         ban=ban,
         ctn=ctn,
         page=page,
-        ctnAmountPerPage=1,
-        recordsPerPage=ctn_amount_per_page,
+        ctnAmountPerPage=ctn_amount_per_page,
         login=login
     )
 
