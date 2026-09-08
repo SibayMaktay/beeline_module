@@ -269,7 +269,7 @@ def get_services_list_paged_app(
     """
     data = beeline_soap.get_services_list_paged(
         ctn=ctn,
-        ban=request,
+        ban=request.ban,
         page=request.page,
         ctn_amount_per_page=request.ctn_amount_per_page
     )
