@@ -4,6 +4,7 @@ from typing import Optional, Any, Dict
 import config.config as config
 from templates.wsdl_template_beeline import *
 import re
+import xmltodict
 
 logger = logging.getLogger(__name__)
 
@@ -18,13 +19,28 @@ def parse_soap_error(response_test):
         return {"code": errcode.group(1), "desc": errdesc.group(1)}
     return None
 
+def find_soap_response_element(body: dict, response_tag: str):
+    """
+    Ищет в body элемент с ключом, который содержит response_tag
+    (например, 'getBANInfoListResponse', 'suspendCTNResponse').
+    Возвращает содержимое этого элемента или None.
+    """
+    for k, v in body.items():
+        if k.endswith(response_tag):
+            return v
+    for k, v in body.items():
+        if response_tag in k:
+            return v
+    return None
+
 def _make_soap_request(xml_payload: str, action: str) -> Optional[Any]:
     """
     Внутренний универсальный метод отправки SOAP.
     """
+    response_tag = f"{action}Response"
     headers = {
         "Content-Type": "text/xml; charset=utf-8",
-        "SOAPAction": action
+        "SOAPAction": f"urn:uss-wsapi:Subscriber:SubscriberInterface:{action}Request"
     }
 
     try:
@@ -41,9 +57,23 @@ def _make_soap_request(xml_payload: str, action: str) -> Optional[Any]:
         response.raise_for_status()
 
         try:
-            import xmltodict
             result = xmltodict.parse(response.content)
-            return result.get('soap:Envelope', {}).get('soap:Body', {})
+            envelope = result.get('S:Envelope') or result.get('soap:Envelope') or result.get('Envelope') or next((v for k, v in result.items() if k.endswith('Envelope')), None)
+            if not envelope:
+                logger.error('SOAP ENV not found')
+                return {"error": "no-envelope"}
+            body = envelope.get('S:Body') or envelope.get('soap:Body') or ('Body') or next((v for k, v in envelope.items() if k.endswith(':Body')), None)
+            if not body:
+                logger.error('SOAP BODY not found')
+                return {'error': "no-body"}
+            resp = None
+            if response_tag:
+                resp = find_soap_response_element(body,response_tag)
+                if not resp:
+                    logger.error(f'SOAP RESPONSE "{response_tag}" element not found')
+                    return {"error": "no-response"}
+                return resp
+            return body
         except ImportError:
             logger.warning("Установите 'xmltodict' для удобного парсинга.")
             return {"raw_xml": response.text}
@@ -76,17 +106,18 @@ class BeelineSoapClient:
         """
         Добровольная блокировка номера (suspendCTN).
         """
+        name = "suspendCTN"
         session_id = self.token_provider
         xml = suspend_ctn_template(
             ctn=ctn,
             reason_code=reason_code,
             actv_date=actv_date,
             session_id=session_id,
-            login=config.beeline_login
+            login=config.beeline_login,
         )
         return _make_soap_request(
-            xml,
-            "urn:uss-wsapi:Subscriber:SubscriberInterface:suspendCTNRequest"
+            xml=xml,
+            action="suspendCTN"
         )
 
     def restore_ctn(
@@ -107,8 +138,8 @@ class BeelineSoapClient:
             login=config.beeline_login
         )
         return _make_soap_request(
-            xml,
-            "urn:uss-wsapi:Subscriber:SubscriberInterface:restoreCTNRequest"
+            xml=xml,
+            action="restoreCTN"
         )
 
     def replace_sim(
@@ -127,8 +158,8 @@ class BeelineSoapClient:
             login=config.beeline_login
         )
         return _make_soap_request(
-            xml,
-            "urn:uss-wsapi:Subscriber:SubscriberInterface:replaceSIMRequest"
+            xml=xml,
+            action="replaceSIM"
         )
 
     def change_pp(
@@ -151,8 +182,8 @@ class BeelineSoapClient:
             login=config.beeline_login
         )
         return _make_soap_request(
-            xml,
-            "urn:uss-wsapi:Subscriber:SubscriberInterface:changePPRequest"
+            xml=xml,
+            action="changePP"
         )
 
     def add_del_soc(
@@ -177,8 +208,8 @@ class BeelineSoapClient:
             login=config.beeline_login
         )
         return _make_soap_request(
-            xml,
-            "urn:uss-wsapi:Subscriber:SubscriberInterface:addDelSOCRequest"
+            xml=xml,
+            action="addDelSOC"
         )
 
     def get_sim_list(
@@ -194,8 +225,8 @@ class BeelineSoapClient:
             login=config.beeline_login
         )
         return _make_soap_request(
-            xml,
-            "urn:uss-wsapi:Subscriber:SubscriberInterface:getSIMListRequest"
+            xml=xml,
+            action="getSIMList"
         )
 
     def get_sim_list_paged(
@@ -215,8 +246,8 @@ class BeelineSoapClient:
             records_per_page=records_per_page
         )
         return _make_soap_request(
-            xml,
-            "urn:uss-wsapi:Subscriber:SubscriberInterface:getSIMListPagedRequest"
+            xml=xml,
+            action="getSIMListPaged"
         )
 
     def get_request_list(
@@ -238,8 +269,8 @@ class BeelineSoapClient:
             records_per_page=records_per_page
         )
         return _make_soap_request(
-            xml,
-            "urn:uss-wsapi:Subscriber:SubscriberInterface:getRequestListRequest"
+            xml=xml,
+            action="getRequestList"
         )
 
     def get_services_list(
@@ -255,8 +286,8 @@ class BeelineSoapClient:
             login=config.beeline_login
         )
         return _make_soap_request(
-            xml,
-            "urn:uss-wsapi:Subscriber:SubscriberInterface:getServicesListRequest"
+            xml=xml,
+            action="getServicesList"
         )
 
     def get_services_list_paged(
@@ -276,8 +307,8 @@ class BeelineSoapClient:
             ctn_amount_per_page=ctn_amount_per_page
         )
         return _make_soap_request(
-            xml,
-            "urn:uss-wsapi:Subscriber:SubscriberInterface:getServicesListPagedRequest"
+            xml=xml,
+            action="getServicesListPaged"
         )
 
     def get_ctn_info_list(
@@ -296,8 +327,8 @@ class BeelineSoapClient:
             login=config.beeline_login
         )
         return _make_soap_request(
-            xml,
-            "urn:uss-wsapi:Subscriber:SubscriberInterface:getCTNInfoListRequest"
+            xml=xml,
+            action="getCTNInfoList"
         )
 
     def get_ctn_info_list_paged(
@@ -320,8 +351,8 @@ class BeelineSoapClient:
             login=config.beeline_login
         )
         return _make_soap_request(
-            xml,
-            "urn:uss-wsapi:Subscriber:SubscriberInterface:getCTNInfoListRequest"
+            xml=xml,
+            action="getCTNInfoList"
         )
 
     def get_payment_list(
@@ -344,8 +375,8 @@ class BeelineSoapClient:
             login=config.beeline_login
         )
         return _make_soap_request(
-            xml,
-            "urn:uss-wsapi:Subscriber:SubscriberInterface:getPaymentListRequest"
+            xml=xml,
+            action="getPaymentList"
         )
 
     def get_payment_list_paged(
@@ -372,8 +403,8 @@ class BeelineSoapClient:
             records_per_page=records_per_page
         )
         return _make_soap_request(
-            xml,
-            "urn:uss-wsapi:Subscriber:SubscriberInterface:getPaymentListRequest"
+            xml=xml,
+            action="getPaymentList"
         )
 
     def get_unbilled_balance(
@@ -390,8 +421,8 @@ class BeelineSoapClient:
             login=config.beeline_login
         )
         return _make_soap_request(
-            xml,
-            "urn:uss-wsapi:Subscriber:SubscriberInterface:getUnbilledBalancesRequest"
+            xml=xml,
+            action="getUnbilledBalances"
         )
 
     def get_unbilled_calls_list(
@@ -405,8 +436,8 @@ class BeelineSoapClient:
             login=config.beeline_login
         )
         return _make_soap_request(
-            xml,
-            "urn:uss-wsapi:Subscriber:SubscriberInterface:getUnbilledCallsListRequest"
+            xml=xml,
+            action="getUnbilledCallsList"
         )
 
     def get_adjustment_list(
@@ -424,8 +455,8 @@ class BeelineSoapClient:
             login=config.beeline_login
         )
         return _make_soap_request(
-            xml,
-            "urn:uss-wsapi:Subscriber:SubscriberInterface:getAdjustmentListRequest"
+            xml=xml,
+            action="getAdjustmentList"
         )
 
     def create_bill_calls_request(
@@ -446,8 +477,8 @@ class BeelineSoapClient:
             ctn_list=ctn_list
         )
         return _make_soap_request(
-            xml,
-            "urn:uss-wsapi:Subscriber:SubscriberInterface:createBillCallsRequest"
+            xml=xml,
+            action="createBillCalls"
         )
 
     def create_bill_charges_request(
@@ -468,8 +499,8 @@ class BeelineSoapClient:
             ctn_list=ctn_list
         )
         return _make_soap_request(
-            xml,
-            "urn:uss-wsapi:Subscriber:SubscriberInterface:createBillChargesRequest"
+            xml=xml,
+            action="createBillCharges"
         )
 
     def get_bill_calls(
@@ -483,8 +514,8 @@ class BeelineSoapClient:
             login=config.beeline_login
         )
         return _make_soap_request(
-            xml,
-            "urn:uss-wsapi:Subscriber:SubscriberInterface:getBillCallsRequest"
+            xml=xml,
+            action="getBillCalls"
         )
 
     def get_bill_calls_paged(
@@ -505,8 +536,8 @@ class BeelineSoapClient:
             records_per_page=records_per_page
         )
         return _make_soap_request(
-            xml,
-            "urn:uss-wsapi:Subscriber:SubscriberInterface:getBillCallsPagedRequest"
+            xml=xml,
+            action="getBillCallsPaged"
         )
 
     def get_bill_charges(
@@ -520,8 +551,8 @@ class BeelineSoapClient:
             login=config.beeline_login
         )
         return _make_soap_request(
-            xml,
-            "urn:uss-wsapi:Subscriber:SubscriberInterface:getBillChargesRequest"
+            xml=xml,
+            action="getBillCharges"
         )
 
     def get_bill_charges_paged(
@@ -539,8 +570,8 @@ class BeelineSoapClient:
             records_per_page=records_per_page
         )
         return _make_soap_request(
-            xml,
-            "urn:uss-wsapi:Subscriber:SubscriberInterface:getBillChargesPagedRequest"
+            xml=xml,
+            action="getBillChargesPaged"
         )
 
     def get_ban_info_list(
@@ -555,8 +586,8 @@ class BeelineSoapClient:
             login=config.beeline_login
         )
         return _make_soap_request(
-            xml,
-            "urn:uss-wsapi:Subscriber:SubscriberInterface:getBANInfoListRequest"
+            xml=xml,
+            action="getBANInfoList"
         )
 
     def get_ban_info_list_paged(
@@ -575,8 +606,8 @@ class BeelineSoapClient:
             records_per_page=records_per_page
         )
         return _make_soap_request(
-            xml,
-            "urn:uss-wsapi:Subscriber:SubscriberInterface:getBANInfoListPagedRequest"
+            xml=xml,
+            action="getBANInfoListPaged"
         )
 
     def create_details_request(
@@ -603,8 +634,8 @@ class BeelineSoapClient:
             email=email
         )
         return _make_soap_request(
-            xml,
-            "urn:uss-wsapi:Subscriber:SubscriberInterface:createDetailsRequest"
+            xml=xml,
+            action="createDetails"
         )
 
     def get_details(
@@ -618,8 +649,8 @@ class BeelineSoapClient:
             login=config.beeline_login
         )
         return _make_soap_request(
-            xml,
-            "urn:uss-wsapi:Subscriber:SubscriberInterface:getDetailsRequest"
+            xml=xml,
+            action="getDetails"
         )
 
     def add_shared_number_dol(
@@ -645,8 +676,8 @@ class BeelineSoapClient:
             check_add_number_registration=check_add_number_registration
         )
         return _make_soap_request(
-            xml,
-            "urn:uss-wsapi:Subscriber:SubscriberInterface:addSharedNumberDOLRequest"
+            xml=xml,
+            action="addSharedNumberDOL"
         )
 
     def add_shared_number_list_dol(
@@ -672,8 +703,8 @@ class BeelineSoapClient:
             check_add_number_registration=check_add_number_registration
         )
         return _make_soap_request(
-            xml,
-            "urn:uss-wsapi:Subscriber:SubscriberInterface:addSharedNumberListDOLRequest"
+            xml=xml,
+            action="addSharedNumberListDOL"
         )
 
     def delete_shared_number_list_dol(
@@ -693,8 +724,8 @@ class BeelineSoapClient:
             ctn_to=ctn_to
         )
         return _make_soap_request(
-            xml,
-            "urn:uss-wsapi:Subscriber:SubscriberInterface:deleteSharedNumberListDOLRequest"
+            xml=xml,
+            action="deleteSharedNumberListDOL"
         )
 
     def personal_data_update(
@@ -711,8 +742,8 @@ class BeelineSoapClient:
             login=config.beeline_login
         )
         return _make_soap_request(
-            xml,
-            "urn:uss-wsapi:Subscriber:SubscriberInterface:personalDataUpdateRequest"
+            xml=xml,
+            action="personalDataUpdate"
         )
 
     def personal_data_result(
@@ -729,8 +760,8 @@ class BeelineSoapClient:
             login=config.beeline_login
         )
         return _make_soap_request(
-            xml,
-            "urn:uss-wsapi:Subscriber:SubscriberInterface:personalDataResultRequest"
+            xml=xml,
+            action="personalDataResult"
         )
 
     def get_data(
@@ -751,8 +782,8 @@ class BeelineSoapClient:
             subscriber_no=subscriber_no
         )
         return _make_soap_request(
-            xml,
-            "urn:uss-wsapi:Subscriber:SubscriberInterface:getDataRequest"
+            xml=xml,
+            action="getData"
         )
 
     def get_data_report(
@@ -773,6 +804,6 @@ class BeelineSoapClient:
             records_per_page=records_per_page
         )
         return _make_soap_request(
-            xml,
-            "urn:uss-wsapi:Subscriber:SubscriberInterface:getDataReportRequest"
+            xml=xml,
+            action="getDataReport"
         )
