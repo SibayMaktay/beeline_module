@@ -29,8 +29,8 @@ def get_soap_client() -> BeelineSoapClient:
     return BeelineSoapClient(token_provider=token)
 
 
-def ctn_10_validator(ctn: str = Query(..., description="Номер **ctn** (ровно 10 цифр)")) -> str:
-    if not re.fullmatch(r'\d{10}', ctn):
+def ctn_10_validator(ctn: str = Query(..., description="Номер **ctn** (ровно 10-11 цифр)")) -> str:
+    if not re.fullmatch(r'\d{10,11}', ctn):
         raise HTTPException(status_code=422, detail="ctn должен содержать ровно 10 цифр")
     return ctn
 

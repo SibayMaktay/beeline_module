@@ -1,6 +1,6 @@
 import logging
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, HTTPException, Depends, Header, Request
+from fastapi import FastAPI, HTTPException, Depends, Header, Request, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from typing import Optional, Any, List, Dict
@@ -40,6 +40,11 @@ def get_beeline_rest_client():
 
 def get_beeline_soap_client():
     return BeelineSoapClient(token_provider=get_beeline_token)
+
+def ctn_10_validator(ctn: str = Query(..., description="Номер **ctn** (ровно 10-11 цифр)")) -> str:
+    if not re.fullmatch(r'\d{10,11}', ctn):
+        raise HTTPException(status_code=422, detail="ctn должен содержать ровно 10-11 цифр")
+    return ctn
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -116,7 +121,7 @@ async def wsdl_health_check():
 # ============================================================================
 @app.get("/rest/rests", summary="Остатки пакетов абонента (REST)", tags=["REST Beeline"])
 async def get_rests_app(
-    ctn: str,
+    ctn: str = Depends(ctn_10_validator),
     client: Optional[str] = None,
     api_key: str = Depends(verify_api_key),
     beeline_rest: BeelineRestClient = Depends(get_beeline_rest_client),
@@ -131,7 +136,7 @@ async def get_rests_app(
 
 @app.get("/rest/subscriptions", summary="Активные подписки абонента (REST)", tags=["REST Beeline"])
 async def get_subscriptions(
-    ctn: str,
+    ctn: str = Depends(ctn_10_validator),
     client: Optional[str] = None,
     beeline_rest: BeelineRestClient = Depends(get_beeline_rest_client),
     api_key: str = Depends(verify_api_key)
@@ -146,7 +151,7 @@ async def get_subscriptions(
 
 @app.get("/rest/subscriptions/remove", summary="отключение подписки абонента (REST)", tags=["REST Beeline"])
 async def remove_subscription_app(
-    ctn: str,
+    ctn: str = Depends(ctn_10_validator),
     subscription_id: str = None,
     type: str = None,
     client: Optional[str] = None,
@@ -165,7 +170,7 @@ async def remove_subscription_app(
 
 @app.get("/rest/callforward/get", summary="Получить параметры переадресации (объединённый запрос: шаг 1+2)", tags=["REST Beeline"])
 async def get_call_forward_combined(
-    ctn: str,
+    ctn: str = Depends(ctn_10_validator),
     client: Optional[str] = None,
     beeline_rest: BeelineRestClient = Depends(get_beeline_rest_client),
     api_key: str = Depends(verify_api_key)
@@ -270,7 +275,7 @@ async def get_call_forward_combined(
 
 @app.get("/rest/callforward/request", summary="Создать запрос на получение параметров переадресации (REST, шаг 1)", tags=["REST Beeline"])
 async def request_call_forward_app(
-    ctn: str,
+    ctn: str = Depends(ctn_10_validator),
     client: Optional[str] = None,
     beeline_rest: BeelineRestClient = Depends(get_beeline_rest_client),
     api_key: str = Depends(verify_api_key)
