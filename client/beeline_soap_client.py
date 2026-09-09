@@ -8,16 +8,36 @@ import xmltodict
 
 logger = logging.getLogger(__name__)
 
-def parse_soap_error(response_test):
+def parse_soap_error_xml(response_test):
     """
-    Парсит SOAP-ошибку Beeline, ищет <errorCode>и<errorDescription>.
-    Вернёт dict, либо None если не найдено.
+    Разбирает SOAP Fault и вытаскивает подробности: код, описание, message, faultstring.
+    Формирует дружелюбный dict-ответ.
     """
-    errcode = re.search(r"<errorCode>(\d+)</errorCode>", response_test)
-    errdesc = re.search(r"<errorDescription>([\w\s]+)</errorDescription>", response_test)
-    if errcode and errdesc:
-        return {"code": errcode.group(1), "desc": errdesc.group(1)}
-    return None
+    try:
+        d = xmltodict.parse(response_test)
+        env = d.get('S:Envelope') or d.get('soap:Envelope') or d.get('Envelope') or next((v for k, v in d.items() if k.endswith('Envelope')), None)
+        body = env.get('S:Body') or env.get('soap:Body') or env.get('Body') or next((v for k, v in env.items() if k.endswith(':Body')), None)
+        fault = next((v for k, v in body.items() if 'Fault' in k), None)
+        if not fault:
+            return None
+        res = {}
+        res['faultcode'] = fault.get('faultcode')
+        res['faultstring'] = fault.get('faultstring')
+        detail = fault.get('detail')
+        if detail:
+            uss = None
+            for v in detail.values():
+                if isinstance(v, dict) and ('errorCode' in v or 'errorDescription' in v):
+                    uss = v
+                    break
+            if uss:
+                res['error_code'] = uss.get('errorCode')
+                res['error_description'] = uss.get('errorDescription')
+                res['message'] = uss.get('message')
+        return res
+    except Exception as e:
+        logger.warning(f"Ошибка парсинга SOAP Fault: {e}")
+        return None
 
 def find_soap_response_element(body: dict, response_tag: str):
     """
@@ -79,10 +99,19 @@ def _make_soap_request(xml_payload: str, action: str) -> Optional[Any]:
             return {"raw_xml": response.text}
             
     except requests.exceptions.HTTPError as e:
-        err = parse_soap_error(response.text)
+        err = parse_soap_error_xml(response.text)
         if err:
-            logger.error(f"Beeline SOAP Forbidden: {err['desc']} (code: {err['code']})")
-            return {"error": "forbidden", "desc": err["desc"], "code": err["code"]}
+            commentary = ''
+            if err.get('error_description') == 'INVALID_QUERY_PARAM' and err.get('message'):
+                commentary = f"{err['error_description']}: {err['message']}"
+            msg = f"SOAP Fault {err.get('error_code')}: {err.get('error_description')} {commentary or ''}".strip()
+            logger.error(msg)
+            return {
+                "error": err.get("error_description") or "soap-fault",
+                "code": err.get("error_code"),
+                "detail": err.get("message") or err.get("faultstring") or '',
+                "commentary": commentary or err.get("faultstring") or ''
+            }
         else:
             logger.error(f"HTTP ошибка SOAP: {e}. Ответ: {response.text[:200]}")
             return None
