@@ -16,10 +16,10 @@ class ModelBAN(BaseModel):
 
 class ModelPaged(BaseModel):
     page: Optional[int] = Field(None, description="Номер страницы", ge=1)
-    records_per_page: Optional[int] = Field(None, description="Записей на страницу", le=50, ge=1)
+    records_per_page: Optional[int] = Field(50, description="Записей на страницу", le=50, ge=1)
 
 class ModelCTNAmountPerPage(BaseModel):
-    ctn_amount_per_page: Optional[int] = Field(None, description="Количество CTN на страницу", le=50, ge=1)
+    ctn_amount_per_page: Optional[int] = Field(50, description="Количество CTN на страницу", le=50, ge=1)
 
 class PutCallForwardRequestEdit(BaseModel):
     """Модель для редактирования переадресации."""
