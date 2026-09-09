@@ -404,7 +404,7 @@ def get_unbilled_calls_list_app(
 
     - **ctn**: номер ctn
     """
-    data = beeline_soap.get_unbilled_balance(
+    data = beeline_soap.get_unbilled_calls_list(
         ctn=ctn
     )
     return {"status": "success", "data": data}
