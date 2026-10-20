@@ -724,7 +724,7 @@ def personal_data_update_app(
     | name (Название) | description (Описание) | value (Значение) | obligatoriness (Обязательность) | comment (Комментарий) |
     | :--- | :--- | :--- | :--- | :--- |
     | **ban** | **Лицевой счёт** - это номер договора, на который оформлен телефонный номер | ***string*** | **true** (***обязательное***)* | 9 цифр |
-    | **ctn** | **Номер телефона** | ***string*** | **true** (***обязательное***)* | 10 цифр (без знаков +7, 7, 8) |
+    | **ctn** | **Номер телефона** - это номер мобильного телефона абонента, их может быть несколько из-за этого введите через запятую, например (960802xxx1,960802xxx2,960802xxx3) | ***string*** | **true** (***обязательное***)* | 10 цифр (без знаков +7, 7, 8) |
     | **citizenship** | **Гражданство** (Код гражданства показана таблицей ниже) | ***string*** | **false** (***необязательное***) | Оставьте пустым если значение равен **RUS** |
     | **docNo** | **Номер документа** | ***string*** | **true** (***обязательное***)* | 10 цифр. Номер и серия слитно без пробелов. |
     | **docType** | **Тип документа** | ***string*** | **false** (***необязательное***) | Оставьте пустым если значение равен **1** |
@@ -1045,15 +1045,15 @@ def personal_data_update_app(
     | **6** | Загранпаспорт РФ |
     | **7** | Вид на жительство |
     | **8** | Разрешение на временное проживание для лиц без гражданства |"""
-    # data = beeline_soap.personal_data_update(
-    #     data=request.data
-    # )
-    if isinstance(request.dict, dict):
-        data = beeline_soap.personal_data_update_batch([request.dict])
-    elif isinstance(request.dict, list):
-        data = beeline_soap.personal_data_update_batch(request.dict)
-    else:
-        raise HTTPException(status_code=400, detail="Invalid request data format. Expected a dictionary or a list of dictionaries.")
+    data = beeline_soap.personal_data_update(
+        data=request.dict
+    )
+    # if isinstance(request.dict, dict):
+    #     data = beeline_soap.personal_data_update_batch([request.dict])
+    # elif isinstance(request.dict, list):
+    #     data = beeline_soap.personal_data_update_batch(request.dict)
+    # else:
+    #     raise HTTPException(status_code=400, detail="Invalid request data format. Expected a dictionary or a list of dictionaries.")
     return {"status": "success", "data": data}
 
 @router.post("/personalDataResult", summary="Получить результат обновления данных")

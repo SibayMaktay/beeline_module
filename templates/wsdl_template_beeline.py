@@ -533,9 +533,27 @@ def personal_data_update_template(
     data: dict,
     login: str = None
 ):
-    data_xml = "".join(
-        f"<{key}>{val}</{key}>" for key, val in data.items() if val is not None
-    )
+    ctn = data.get("ctn") or ""
+    ban = data.get("ban") or ""
+    ctn_list = [item.strip() for item in ctn.split(",") if item.strip()]
+    ctn_count = len(ctn_list)
+    data_last = {key: val for key, val in data.items() if key not in ["ctn", "ban"]}
+    data_postfix = ";".join(str(val) for val in data_last.values())
+    rows = []
+    for ctn_item in ctn_list:
+        row = f"{ban};{ctn_item};{data_postfix}"
+        rows.append(row)
+    data_xml = "\n".join(rows)
+    # ctn = data.get("ctn") or ""
+    # ban = data.get("ban") or ""
+    # ctn_list = [item.strip() for item in ctn.split(",") if item.strip()]
+    # ctn_count = len(ctn_list)
+    # data_postfix = ";".join(str(val) for val in data.values())
+    # rows = []
+    # for ctn_item in ctn_list:
+    #     row = f"{ban};{ctn_item};{data_postfix}"
+    #     rows.append(row)
+    # data_xml = "\n".join(rows)
     return universal_soap_template(
         session_id,
         "personalDataUpdate",

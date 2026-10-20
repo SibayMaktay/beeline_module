@@ -177,7 +177,7 @@ class DeleteSharedNumberListDOL(SharedNumber):
 
 class PersonalDataUpdate(ModelBAN):
     """Модель для обновления персональных данных."""
-    ctn: str = Field(..., description="Номер телефона", min_length=10, max_length=10)
+    ctn: str = Field(..., description="Номер телефона", min_length=10)
     citizenship: Optional[str] = Field(None, description="Гражданство")
     docNo: str = Field(..., description="Номер документа")
     docType: Optional[str] = Field(None, description="Тип документа")
@@ -194,7 +194,7 @@ class PersonalDataUpdate(ModelBAN):
     surName: Optional[str] = Field(None, description="Отчество")
     lastName: str = Field(..., description="Фамилия")
     birthplace: Optional[str] = Field(None, description="Место рождения")
-    gender: str = Field(..., description="Пол")
+    gender: str = Field(..., description="Пол", maxLength=1, min_length=1)
     taxNumber: Optional[str] = Field(None, description="ИНН")
     snils: Optional[str] = Field(None, description="СНИЛС")
     legalPostcode: Optional[str] = Field(None, description="Адрес Регистрации - Индекс")
