@@ -1046,7 +1046,7 @@ def personal_data_update_app(
     | **7** | Вид на жительство |
     | **8** | Разрешение на временное проживание для лиц без гражданства |"""
     data = beeline_soap.personal_data_update(
-        data=request.data
+        data=request.dict
     )
     # if isinstance(request.dict, dict):
     #     data = beeline_soap.personal_data_update_batch([request.dict])
