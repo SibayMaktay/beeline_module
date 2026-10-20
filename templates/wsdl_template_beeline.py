@@ -1,3 +1,5 @@
+from services.beeline_csv_serializer import serialize_personal_data_for_beeline_multi_ctn
+
 xml_head_template = """<soapenv:Envelope
 xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
 xmlns:urn="urn:uss-wsapi:{interface}">
@@ -533,27 +535,19 @@ def personal_data_update_template(
     data: dict,
     login: str = None
 ):
-    ctn = data.get("ctn") or ""
-    ban = data.get("ban") or ""
-    ctn_list = [item.strip() for item in ctn.split(",") if item.strip()]
-    ctn_count = len(ctn_list)
-    data_last = {key: val for key, val in data.items() if key not in ["ctn", "ban"]}
-    data_postfix = ";".join(str(val) for val in data_last.values())
-    rows = []
-    for ctn_item in ctn_list:
-        row = f"{ban};{ctn_item};{data_postfix}"
-        rows.append(row)
-    data_xml = "\n".join(rows)
+    csv_row = serialize_personal_data_for_beeline_multi_ctn(data)
     # ctn = data.get("ctn") or ""
     # ban = data.get("ban") or ""
     # ctn_list = [item.strip() for item in ctn.split(",") if item.strip()]
     # ctn_count = len(ctn_list)
-    # data_postfix = ";".join(str(val) for val in data.values())
+    # data_last = {key: val for key, val in data.items() if key not in ["ctn", "ban"]}
+    # data_postfix = ";".join(str(val) for val in data_last.values())
     # rows = []
     # for ctn_item in ctn_list:
     #     row = f"{ban};{ctn_item};{data_postfix}"
     #     rows.append(row)
-    # data_xml = "\n".join(rows)
+    # full_data = "\n".join(rows)
+    data_xml = f"<data>{csv_row}</data>"
     return universal_soap_template(
         session_id,
         "personalDataUpdate",
