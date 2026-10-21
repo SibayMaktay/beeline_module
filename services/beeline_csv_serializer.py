@@ -71,6 +71,6 @@ def serialize_personal_data_for_beeline_multi_ctn(data: Dict) -> str:
 
     rows = []
     for ctn in ctn_list:
-        row = f"{ban};{ctn};{postfix_str}"
+        row = f"{ban};{ctn};{postfix_str};"
         rows.append(row)
     return "\n".join(rows)
