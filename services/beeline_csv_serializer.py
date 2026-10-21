@@ -74,4 +74,4 @@ def serialize_personal_data_for_beeline_multi_ctn(data: Dict) -> str:
         row = f"{ban};{ctn};{postfix_str};"
         rows.append(row)
     return """
-""".join(rows)
+    """.join(rows)
