@@ -1048,12 +1048,6 @@ def personal_data_update_app(
     data = beeline_soap.personal_data_update(
         data=request.dict()
     )
-    # if isinstance(request.dict, dict):
-    #     data = beeline_soap.personal_data_update_batch([request.dict])
-    # elif isinstance(request.dict, list):
-    #     data = beeline_soap.personal_data_update_batch(request.dict)
-    # else:
-    #     raise HTTPException(status_code=400, detail="Invalid request data format. Expected a dictionary or a list of dictionaries.")
     return {"status": "success", "data": data}
 
 @router.post("/personalDataResult", summary="Получить результат обновления данных")

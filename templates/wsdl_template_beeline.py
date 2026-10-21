@@ -535,23 +535,11 @@ def personal_data_update_template(
     data: dict,
     login: str = None
 ):
-    csv_row = serialize_personal_data_for_beeline_multi_ctn(data)
-    # ctn = data.get("ctn") or ""
-    # ban = data.get("ban") or ""
-    # ctn_list = [item.strip() for item in ctn.split(",") if item.strip()]
-    # ctn_count = len(ctn_list)
-    # data_last = {key: val for key, val in data.items() if key not in ["ctn", "ban"]}
-    # data_postfix = ";".join(str(val) for val in data_last.values())
-    # rows = []
-    # for ctn_item in ctn_list:
-    #     row = f"{ban};{ctn_item};{data_postfix}"
-    #     rows.append(row)
-    # full_data = "\n".join(rows)
-    data_xml = f"<data>{csv_row}</data>"
+    data_xml = serialize_personal_data_for_beeline_multi_ctn(data)
     return universal_soap_template(
         session_id,
         "personalDataUpdate",
-        data_xml,
+        data=data_xml,
         login=login
     )
 
