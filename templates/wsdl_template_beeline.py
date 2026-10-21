@@ -541,7 +541,7 @@ def personal_data_update_template(
     return universal_soap_template(
         session_id,
         "personalDataUpdate",
-        data="".join([example_data, data_xml]),
+        data=data_xml, #"".join([example_data, data_xml]),
         login=login
     )
 
