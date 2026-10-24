@@ -53,6 +53,12 @@ BEELINE_ORDER_MAPPING = [
     ("АдрПрож Комментарий", "actualAddrComment"),
     ("АдрПрож ФИАС ИД", "actualFiasId"),
 ]
+DEFAULTS = {
+    "citizenship": "RUS",
+    "docType": "1",
+    "legalCountryCode": "RUS",
+    "actualCountryCode": "RUS",
+}
 
 def serialize_personal_data_for_beeline_multi_ctn(data: Dict) -> str:
     """
@@ -66,12 +72,10 @@ def serialize_personal_data_for_beeline_multi_ctn(data: Dict) -> str:
     postfix = []
     for _, model_field in BEELINE_ORDER_MAPPING:
         val = data.get(model_field)
+        if val is (None, ""):
+            val = DEFAULTS.get(model_field, "")
         postfix.append("" if val is None else str(val))
     postfix_str = ";".join(postfix)
 
-    rows = []
-    for ctn in ctn_list:
-        row = f"{ban};{ctn};{postfix_str};"
-        rows.append(row)
-    return """
-    """.join(rows)
+    rows = [f"{ban};{ctn};{postfix_str};" for ctn in ctn_list]
+    return "\n".join(rows)

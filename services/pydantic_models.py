@@ -2,7 +2,7 @@
 Pydantic модели для валидации запросов API.
 """
 from pydantic import BaseModel, Field, field_validator, model_validator
-from typing import Optional, List, Dict, Any
+from typing import Literal, Optional, List, Dict, Any
 import re
 
 class ModelBAN(BaseModel):
@@ -194,7 +194,7 @@ class PersonalDataUpdate(ModelBAN):
     surName: Optional[str] = Field(None, description="Отчество")
     lastName: str = Field(..., description="Фамилия")
     birthplace: Optional[str] = Field(None, description="Место рождения")
-    gender: str = Field(..., description="Пол", maxLength=1, min_length=1)
+    gender: Literal["M", "F"] = Field(..., description="Пол", max_length=1, min_length=1)
     taxNumber: Optional[str] = Field(None, description="ИНН")
     snils: Optional[str] = Field(None, description="СНИЛС")
     legalPostcode: Optional[str] = Field(None, description="Адрес Регистрации - Индекс")
@@ -229,6 +229,10 @@ class PersonalDataUpdate(ModelBAN):
     actualApartmentNo: Optional[str] = Field(None, description="Адрес Проживания - Номер помещения")
     actualAddrComment: Optional[str] = Field(None, description="Адрес Проживания - Комментарий")
     actualFiasId: Optional[str] = Field(None, description="Адрес Проживания - ФИАС ИД")
+    @field_validator("gender", mode="before")
+    @classmethod
+    def validate_gender(cls, v: str) -> str:
+        return v.strip().upper() if isinstance(v, str) else v
 
 
 class PersonalDataResult(BaseModel):

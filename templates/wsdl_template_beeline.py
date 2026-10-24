@@ -535,13 +535,11 @@ def personal_data_update_template(
     data: dict,
     login: str = None
 ):
-    example_data = """*;*;*;*;*;*;;;;*;;;;*;;*;;*;;;;*;;*;*;;;;;;;;;;;*;;*;*;;;;;;;;;;;
-    """
     data_xml = serialize_personal_data_for_beeline_multi_ctn(data)
     return universal_soap_template(
         session_id,
         "personalDataUpdate",
-        data=data_xml, #"".join([example_data, data_xml]),
+        data=data_xml,
         login=login
     )
 
